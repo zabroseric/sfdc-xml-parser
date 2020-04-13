@@ -321,7 +321,7 @@ public class XML {
                 for ( Integer i = 0; i < indents; i++ ) { xmlStringPretty += '   '; }
                 xmlStringPretty += '<' + split + '>\r\n';
 
-                if ( !split.contains('>') && !split.contains('<?xml') && split.left(1) != '/' ) {
+                if ( !split.contains('>') && !split.contains('<?xml') && split.left(1) != '/' && split.right(1) != '/' ) {
                     indents++;
                 }
             }
