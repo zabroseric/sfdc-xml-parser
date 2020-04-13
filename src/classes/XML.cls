@@ -160,39 +160,6 @@ public class XML {
         }
 
         /**
-         * Formats an xml string in pretty format.
-         *
-         * @param xmlString
-         *
-         * @return
-         */
-        private String formatStringPretty(String xmlString)
-        {
-            List<String> xmlStringSplit = xmlString.split('><');
-            String xmlStringPretty = '';
-            Integer indents = 0;
-
-            // Iterate over the individual pieces of the split tags
-            // detecting how many indents are required on every line.
-            for ( String split : xmlStringSplit ) {
-                if ( split.left(1) == '/' ) {
-                    indents--;
-                }
-
-                for ( Integer i = 0; i < indents; i++ ) { xmlStringPretty += '   '; }
-                xmlStringPretty += '<' + split + '>\r\n';
-
-                if ( !split.contains('>') && !split.contains('<?xml') && split.left(1) != '/' ) {
-                    indents++;
-                }
-            }
-
-            xmlStringPretty = xmlStringPretty.trim();
-            xmlStringPretty = xmlStringPretty.left(xmlStringPretty.length() - 1).right(xmlStringPretty.length() - 2);
-            return xmlStringPretty;
-        }
-
-        /**
          * Ensure any nulls values are omitted in the resulting xml string.
          *
          * @return
@@ -200,6 +167,17 @@ public class XML {
         public Writer suppressNulls()
         {
             this.suppressNulls = true;
+            return this;
+        }
+
+        /**
+         * Ensure any nulls values are kept in the resulting xml string.
+         *
+         * @return
+         */
+        public Writer showNulls()
+        {
+            this.suppressNulls = false;
             return this;
         }
 
@@ -215,13 +193,35 @@ public class XML {
         }
 
         /**
-         * Sets whether to see the xml encoding at the beginning of the xml.
+         * Sets the output to be in a minified string.
+         *
+         * @return
+         */
+        public Writer minify()
+        {
+            this.pretty = false;
+            return this;
+        }
+
+        /**
+         * Shows xml encoding at the beginning of the xml.
          *
          * @return
          */
         public Writer showEncoding()
         {
             this.showEncoding = true;
+            return this;
+        }
+
+        /**
+         * Hides xml encoding at the beginning of the xml.
+         *
+         * @return
+         */
+        public Writer hideEncoding()
+        {
+            this.showEncoding = false;
             return this;
         }
 
@@ -247,7 +247,7 @@ public class XML {
          *
          * @return
          */
-        public Writer setAttribute(Map<String, String> attributes)
+        public Writer setAttributes(Map<String, String> attributes)
         {
             this.attributes = attributes;
             return this;
@@ -296,6 +296,39 @@ public class XML {
             this.rootTag = rootTag;
             this.detectRootTag = false;
             return this;
+        }
+
+        /**
+         * Formats an xml string in pretty format.
+         *
+         * @param xmlString
+         *
+         * @return
+         */
+        private String formatStringPretty(String xmlString)
+        {
+            List<String> xmlStringSplit = xmlString.split('><');
+            String xmlStringPretty = '';
+            Integer indents = 0;
+
+            // Iterate over the individual pieces of the split tags
+            // detecting how many indents are required on every line.
+            for ( String split : xmlStringSplit ) {
+                if ( split.left(1) == '/' ) {
+                    indents--;
+                }
+
+                for ( Integer i = 0; i < indents; i++ ) { xmlStringPretty += '   '; }
+                xmlStringPretty += '<' + split + '>\r\n';
+
+                if ( !split.contains('>') && !split.contains('<?xml') && split.left(1) != '/' ) {
+                    indents++;
+                }
+            }
+
+            xmlStringPretty = xmlStringPretty.trim();
+            xmlStringPretty = xmlStringPretty.left(xmlStringPretty.length() - 1).right(xmlStringPretty.length() - 2);
+            return xmlStringPretty;
         }
 
         /**
@@ -620,7 +653,9 @@ public class XML {
                     return tagName.replace('{' + uri + '}', namespaces.get(uri) + ':');
                 }
             }
-            return tagName;
+
+            // If we can't find the tag, just remove the clark notation.
+            return tagName.substringAfter('}');
         }
 
         /**

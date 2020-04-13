@@ -205,6 +205,13 @@ private class XMLTest {
     }
 
     @IsTest
+    private static void serializeEmptyStringShowNulls()
+    {
+        String xmlString = XML.serialize('').showNulls().toString();
+        System.assertEquals('<elements></elements>', xmlString);
+    }
+
+    @IsTest
     private static void serializeEmptyStringSuppressNulls()
     {
         String xmlString = XML.serialize('').suppressNulls().toString();
@@ -263,7 +270,7 @@ private class XMLTest {
     @IsTest
     private static void serializeSetXMLHeaderAttributesSuppressNulls()
     {
-        String xmlString = XML.serialize(new List<String>()).setAttribute('Attr', 'No Attributes').suppressNulls().toString();
+        String xmlString = XML.serialize(new List<String>()).setAttributes(new Map<String, String>{'Attr' => 'No Attributes'}).suppressNulls().toString();
         System.assertEquals('<elements Attr="No Attributes" />', xmlString);
     }
 
@@ -272,6 +279,13 @@ private class XMLTest {
     {
         String xmlString = XML.serialize(new List<String>()).showEncoding().toString();
         System.assertEquals('<?xml version="1.0" encoding="UTF-8"?><elements></elements>', xmlString);
+    }
+
+    @IsTest
+    private static void serializeHideEncoding()
+    {
+        String xmlString = XML.serialize(new List<String>()).hideEncoding().toString();
+        System.assertEquals('<elements></elements>', xmlString);
     }
 
     @IsTest
@@ -375,6 +389,16 @@ private class XMLTest {
     }
 
     @IsTest
+    private static void serializeToStringMinifiedList()
+    {
+        String xmlString = XML.serialize(new List<String>{
+            'a',
+            'b'
+        }).minify().toString();
+        System.assertEquals('<elements><element>a</element><element>b</element></elements>', xmlString);
+    }
+
+    @IsTest
     private static void serializeToStringPrettyListMap()
     {
         String xmlString = XML.serialize(new List<Object>{
@@ -408,6 +432,17 @@ private class XMLTest {
             }
         }).setNamespaces(new Map<String, String>{'http://example1.org' => 'p1', 'http://example2.org' => 'p2'}).toString();
         System.assertEquals('<element xmlns:p1="http://example1.org" xmlns:p2="http://example2.org"><p2:c>d</p2:c><p1:a>b</p1:a></element>', xmlString);
+    }
+
+    @IsTest
+    private static void serializeNamespacesNotFound()
+    {
+        String xmlString = XML.serialize(new List<Object>{
+            new Map<String, String>{
+                '{http://example1.org}a' => 'b'
+            }
+        }).setNamespaces(new Map<String, String>{'http://example2.org' => 'p2'}).toString();
+        System.assertEquals('<element xmlns:p2="http://example2.org"><a>b</a></element>', xmlString);
     }
 
     @IsTest
