@@ -186,17 +186,6 @@ public class XML {
          *
          * @return
          */
-        public Writer pretty()
-        {
-            this.beautify = true;
-            return this;
-        }
-
-        /**
-         * Sets the output to be in a nicely formatted string.
-         *
-         * @return
-         */
         public Writer beautify()
         {
             this.beautify = true;
@@ -374,6 +363,7 @@ public class XML {
         private String xmlString;
         private Type apexType = null;
         private Set<String> arrayNodes = new Set<String>();
+        private Boolean showNamespaces = true;
 
         /**
          * Pass the xml string for deserialization.
@@ -401,6 +391,7 @@ public class XML {
                 objectMap = (new DOMString())
                     .setString(xmlString)
                     .setArrayNodes(arrayNodes)
+                    .showNamespaces(showNamespaces)
                     .parse()
                 ;
             }
@@ -491,6 +482,29 @@ public class XML {
         public Reader setArrayNode(String node)
         {
             this.arrayNodes.add(node);
+            return this;
+        }
+
+        /**
+         * Shows namespaces as clark notations.
+         *
+         * @return
+         */
+        public Reader showNamespaces()
+        {
+            this.showNamespaces = true;
+            return this;
+        }
+
+
+        /**
+         * Hide namespaces and show only the tag name.
+         *
+         * @return
+         */
+        public Reader hideNamespaces()
+        {
+            this.showNamespaces = false;
             return this;
         }
     }
@@ -767,6 +781,8 @@ public class XML {
     {
         private String xmlString;
         private Set<String> arrayNodes = new Set<String>();
+        private Map<String, Object> namespaceMap = new Map<String, Object>();
+        private Boolean showNamespaces = false;
 
         /**
          * Sets what nodes should be treated as arrays even if not detected as one.
@@ -791,6 +807,19 @@ public class XML {
         public DOMString setString(String xmlString)
         {
             this.xmlString = xmlString;
+            return this;
+        }
+
+        /**
+         * Sets whether or not to display the namespaces using clark notations or hide them completely.
+         *
+         * @param xmlString
+         *
+         * @return
+         */
+        public DOMString showNamespaces(Boolean showNamespaces)
+        {
+            this.showNamespaces = showNamespaces;
             return this;
         }
 
@@ -824,7 +853,7 @@ public class XML {
             if ( hasNext ) { reader.next(); }
 
             while( hasNext ) {
-                tagName = reader.getLocalName();
+                tagName = ( showNamespaces && reader.getNamespace() != null ? '{' + reader.getNamespace() + '}' : '') + reader.getLocalName();
 
                 if ( reader.getEventType() == XmlTag.START_ELEMENT ) {
                     objectCurrent = parseNested(reader, tagName);

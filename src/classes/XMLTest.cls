@@ -471,7 +471,7 @@ private class XMLTest {
     }
 
     @IsTest
-    private static void serializeDeserializeNamespaces()
+    private static void serializeDeserializeHideNamespaces()
     {
         String xmlString = XML.serialize(new List<Object>{
             new Map<String, String>{
@@ -485,7 +485,25 @@ private class XMLTest {
                 'a' => 'b',
                 'c' => 'd'
             }
-        }, XML.deserialize(xmlString).toObject());
+        }, XML.deserialize(xmlString).hideNamespaces().toObject());
+    }
+
+    @IsTest
+    private static void serializeDeserializeShowNamespaces()
+    {
+        String xmlString = XML.serialize(new List<Object>{
+            new Map<String, String>{
+                '{http://example1.org}a' => 'b',
+                '{http://example2.org}c' => 'd'
+            }
+        }).setNamespaces(new Map<String, String>{'http://example1.org' => 'p1', 'http://example2.org' => 'p2'}).toString();
+
+        System.assertEquals(new Map<String, Object>{
+            'element' => new Map<String, String>{
+                '{http://example1.org}a' => 'b',
+                '{http://example2.org}c' => 'd'
+            }
+        }, XML.deserialize(xmlString).showNamespaces().toObject());
     }
 
     @IsTest

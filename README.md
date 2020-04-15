@@ -297,7 +297,6 @@ The result gets transformed to valid xml:
 ```
 
 ## To-Do List
-* Clark notations are write only
 * Array nodes can't be specified with their a full path name
 * Custom element parsers
 * Namespace filtering
