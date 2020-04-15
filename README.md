@@ -33,7 +33,7 @@ Contact contact = new Contact(
 );
 insert contact;
 
-String xmlString = XML.serialize(contact).pretty().toString();
+String xmlString = XML.serialize(contact).beautify().toString();
 ```
 
 Result
@@ -63,7 +63,7 @@ List<Contact> contacts = new List<Contact>{
 };
 insert contacts;
 
-String xmlString = XML.serialize(contacts).pretty().toString();
+String xmlString = XML.serialize(contacts).beautify().toString();
 ```
 
 Result
@@ -103,7 +103,7 @@ Library libraryObject = new Library(
     )
 );
 
-String xmlString = XML.serialize(libraryObject).setRootTag('library').pretty().toString();
+String xmlString = XML.serialize(libraryObject).setRootTag('library').beautify().toString();
 ```
 
 Result
@@ -139,7 +139,7 @@ If one isn't specified the default is: <elements><element></element></elements>
 String xmlString = XML.serialize(new Map<String, String>{
     'key1' => 'val1',
     'key2' => 'val2'
-}).pretty().debug().toString();
+}).beautify().debug().toString();
 ```
 
 Result
@@ -214,7 +214,7 @@ Contact contact = new Contact(
 
 String xmlString = XML.serialize(contact)
     .debug() // Debug 1
-    .showEncoding().pretty().debug() // Debug 2
+    .showEncoding().beautify().debug() // Debug 2
     .toString();
 ``` 
 
@@ -250,7 +250,7 @@ Library library = new Library(
     )
 );
 
-XML.serialize(library).suppressNulls().setRootTag('library').pretty().debug();
+XML.serialize(library).suppressNulls().setRootTag('library').beautify().debug();
 ```
 
 Result
@@ -285,7 +285,7 @@ XML.serialize(new List<Object>{
         '{http://example.org}localname1' => 'val1',
         '{http://example.org}localname2' => 'val2'
     }
-}).setNamespace('http://example.org', 'b').pretty().debug();
+}).setNamespace('http://example.org', 'b').beautify().debug();
 ```
 
 The result gets transformed to valid xml:

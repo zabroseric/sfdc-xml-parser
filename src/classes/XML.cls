@@ -88,7 +88,7 @@ public class XML {
         private Map<String, String> attributes = new Map<String, String>();
         private Map<String, String> namespaces = new Map<String, String>();
         private Boolean detectRootTag = true;
-        private Boolean pretty = false;
+        private Boolean beautify = false;
 
         private Object obj;
 
@@ -135,7 +135,7 @@ public class XML {
                 xmlString = xmlString.left(xmlString.length() - 3 - rootTag.length())
                     .replace('<' + elementTag + '>', '').replace('<' + rootTag, '<' + elementTag);
             }
-            return pretty ? formatStringPretty(xmlString) : xmlString;
+            return beautify ? formatString(xmlString) : xmlString;
         }
 
         /**
@@ -188,7 +188,18 @@ public class XML {
          */
         public Writer pretty()
         {
-            this.pretty = true;
+            this.beautify = true;
+            return this;
+        }
+
+        /**
+         * Sets the output to be in a nicely formatted string.
+         *
+         * @return
+         */
+        public Writer beautify()
+        {
+            this.beautify = true;
             return this;
         }
 
@@ -199,7 +210,7 @@ public class XML {
          */
         public Writer minify()
         {
-            this.pretty = false;
+            this.beautify = false;
             return this;
         }
 
@@ -299,16 +310,16 @@ public class XML {
         }
 
         /**
-         * Formats an xml string in pretty format.
+         * Formats the xml string.
          *
          * @param xmlString
          *
          * @return
          */
-        private String formatStringPretty(String xmlString)
+        private String formatString(String xmlString)
         {
             List<String> xmlStringSplit = xmlString.split('><');
-            String xmlStringPretty = '';
+            String xmlStringFormatted = '';
             Integer indents = 0;
 
             // Iterate over the individual pieces of the split tags
@@ -318,17 +329,17 @@ public class XML {
                     indents--;
                 }
 
-                for ( Integer i = 0; i < indents; i++ ) { xmlStringPretty += '   '; }
-                xmlStringPretty += '<' + split + '>\r\n';
+                for ( Integer i = 0; i < indents; i++ ) { xmlStringFormatted += '   '; }
+                xmlStringFormatted += '<' + split + '>\r\n';
 
                 if ( !split.contains('>') && !split.contains('<?xml') && split.left(1) != '/' && split.right(1) != '/' ) {
                     indents++;
                 }
             }
 
-            xmlStringPretty = xmlStringPretty.trim();
-            xmlStringPretty = xmlStringPretty.left(xmlStringPretty.length() - 1).right(xmlStringPretty.length() - 2);
-            return xmlStringPretty;
+            xmlStringFormatted = xmlStringFormatted.trim();
+            xmlStringFormatted = xmlStringFormatted.left(xmlStringFormatted.length() - 1).right(xmlStringFormatted.length() - 2);
+            return xmlStringFormatted;
         }
 
         /**

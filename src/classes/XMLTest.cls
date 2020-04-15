@@ -379,12 +379,12 @@ private class XMLTest {
     ---------------------------------------------
      */
     @IsTest
-    private static void serializeToStringPrettyList()
+    private static void serializeToFormattedStringList()
     {
         String xmlString = XML.serialize(new List<String>{
             'a',
             'b'
-        }).pretty().toString();
+        }).beautify().toString();
         System.assertEquals('<elements>\r\n   <element>a</element>\r\n   <element>b</element>\r\n</elements>', xmlString);
     }
 
@@ -399,14 +399,14 @@ private class XMLTest {
     }
 
     @IsTest
-    private static void serializeToStringPrettyListMap()
+    private static void serializeToFormattedStringListMap()
     {
         String xmlString = XML.serialize(new List<Object>{
             new Map<String, String>{
                 'a' => 'b',
                 'c' => 'd'
             }
-        }).pretty().toString();
+        }).beautify().toString();
         System.assertEquals('<element>\r\n   <c>d</c>\r\n   <a>b</a>\r\n</element>', xmlString);
     }
 
@@ -446,28 +446,28 @@ private class XMLTest {
     }
 
     @IsTest
-    private static void serializeToStringPrettyListMapEncoding()
+    private static void serializeToFormattedStringListMapEncoding()
     {
         String xmlString = XML.serialize(new List<Object>{
             new Map<String, String>{
                 'a' => 'b',
                 'c' => 'd'
             }
-        }).showEncoding().pretty().toString();
+        }).showEncoding().beautify().toString();
         System.assertEquals('<?xml version="1.0" encoding="UTF-8"?>\r\n<element>\r\n   <c>d</c>\r\n   <a>b</a>\r\n</element>', xmlString);
     }
 
     @IsTest
-    private static void serializeToStringPrettyString()
+    private static void serializeToFormattedStringString()
     {
-        String xmlString = XML.serialize('abc').pretty().toString();
+        String xmlString = XML.serialize('abc').beautify().toString();
         System.assertEquals('<elements>abc</elements>', xmlString);
     }
 
     @IsTest
     private static void serializeDebug()
     {
-        XML.serialize('abc').debug().pretty().debug();
+        XML.serialize('abc').debug().beautify().debug();
     }
 
     @IsTest
