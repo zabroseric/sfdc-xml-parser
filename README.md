@@ -22,7 +22,7 @@ When working with Apex there are often limitations that you would often expect t
 * Tag and Value Sanitization
 
 ## Usage
-The methods below show examples of common cases when parsing xml, and how you may go around this. Check out the [Cool Stuff](#cool-stuff) area for details on various pieces of functionality that can be used to alter the xml characteristics.
+The methods below show examples of common cases when parsing xml, and how you may go around this. Check out the [Other Cool Stuff](#other-cool-stuff) area for details on various pieces of functionality that can be used to alter the xml characteristics.
 
 ### Serialization
 #### SObject
@@ -175,7 +175,7 @@ Map<String, Object> objectMap = (Map<String, Object>) XML.deserialize('<elements
     .setArrayNode('elements').toObject();
 ```
 
-## <a name="cool-stuff"></a> Other Cool Stuff
+## <a name="other-cool-stuff"></a> Other Cool Stuff
 #### Array Nodes
 As true reflection is not support in Apex, there is no way to detect if an xml tag should truly be an array or a map. As a solution, we can specify what tags should be treated as an array when deserialized.
 
