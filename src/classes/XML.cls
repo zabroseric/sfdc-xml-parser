@@ -27,8 +27,8 @@ SOFTWARE.
  */
 public class XML {
 
-    private static String DEFAULT_ROOT_TAG = 'elements';
-    private static String DEFAULT_ELEMENT_TAG = 'element';
+    private static final String DEFAULT_ROOT_TAG = 'elements';
+    private static final String DEFAULT_ELEMENT_TAG = 'element';
 
     /**
      * Initialises the writer class and exposes the methods provided
@@ -73,11 +73,13 @@ public class XML {
     }
 
     /**
+    * ===============================================================================
      * The entry for the XML Writer class that serializes sobject, objects, lists, maps
      * and other types to a string.
      *
-     * The class uses function chaining to write to the parameters and does
+     * The class uses function chaining to write to the variables and does
      * not expose these directly.
+     * ===============================================================================
      */
     public class Writer {
 
@@ -90,7 +92,7 @@ public class XML {
         private Boolean detectRootTag = true;
         private Boolean beautify = false;
 
-        private Object obj;
+        private ObjectWrapper obj;
 
         /**
          * Pass the object for serialization.
@@ -101,7 +103,7 @@ public class XML {
          */
         public Writer write(Object obj)
         {
-            this.obj = obj;
+            this.obj = (new ObjectWrapper(obj));
             return this;
         }
 
@@ -112,17 +114,7 @@ public class XML {
          */
         public override String toString()
         {
-            detectSObjectTags();
-
-            Dom.Document document = new DOMObj()
-                .setObject(obj)
-                .parse(rootTag, elementTag, namespaces, suppressNulls);
-
-            // Set the attributes on the root node.
-            for ( String key : attributes.keySet() ) {
-                document.getRootElement().setAttribute(key, attributes.get(key));
-            }
-
+            Dom.Document document = parse();
             String xmlString = document.toXmlString();
 
             // If we chose to hide the encoding, remove it.
@@ -332,31 +324,177 @@ public class XML {
         }
 
         /**
-         * Detects and sets both the root and element tags based on any SObjects that can be found from
-         * the object provided.
+         * The entry point for the write toString method.
+         *
+         * @param rootTag
+         * @param elementTag
+         * @param suppressNulls
+         *
+         * @return
          */
-        private void detectSObjectTags()
+        private Dom.Document parse()
         {
-            if ( obj instanceof List<SObject> ) {
-                rootTag = ((List<SObject>) obj).getSObjectType().getDescribe().labelPlural;
-                elementTag = ((List<SObject>) obj).getSObjectType().getDescribe().label;
+            // Detects and sets both the root and element tags based on any SObjects that can be found from
+            // the object provided.
+            if ( obj.instanceOfSObjectMap() || obj.instanceOfSObjectList() ) {
+                rootTag = obj.getSObjectDescribe().labelPlural;
+                elementTag = obj.getSObjectDescribe().label;
             }
-            else if ( obj instanceof Map<Id, SObject> ) {
-                rootTag = ((Map<Id, SObject>) obj).getSObjectType().getDescribe().labelPlural;
-                elementTag = ((Map<Id, SObject>) obj).getSObjectType().getDescribe().labelPlural;
+            else if ( obj.instanceOfSObject() ) {
+                rootTag = obj.getSObjectDescribe().label;
             }
-            else if ( obj instanceof SObject ) {
-                rootTag = ((SObject) obj).getSObjectType().getDescribe().label;
+
+            ObjectWrapper obj = obj.toUntyped();
+            Dom.Document document = new Dom.Document();
+            Dom.XmlNode xmlNode = document.createRootElement(rootTag, null, null);
+
+            // Set the attributes on the root node.
+            for ( String key : attributes.keySet() ) {
+                document.getRootElement().setAttribute(key, attributes.get(key));
             }
+
+            // Detect the type of root object we have and parse it.
+            if ( obj.instanceOfList() && !obj.isEmpty() ) {
+                parseList(obj.toList(), elementTag, xmlNode);
+            }
+            else if ( obj.instanceOfMap() && !obj.isEmpty() ) {
+                parseMap(obj.toMap(), xmlNode);
+            }
+
+            // Otherwise if we have primitive type, parse this.
+            else if ( !(obj.isEmpty() && suppressNulls) ) {
+                xmlNode.addTextNode(obj.toString());
+            }
+
+            return document;
+        }
+
+        /**
+         * Parse a map for iteration, if we have chosen to empty nodes
+         * and the resulting node from children are empty, remove them.
+         *
+         * @param values
+         * @param xmlNode
+         *
+         * @return
+         */
+        private Boolean parseMap(Map<String, Object> values, DOM.XmlNode xmlNode)
+        {
+            Boolean isEmptyChild = parseMulti(new List<String>(values.keySet()), values.values(), xmlNode);
+            if ( isEmptyChild && xmlNode.getParent() != null ) { xmlNode.getParent().removeChild(xmlNode); }
+            return isEmptyChild;
+        }
+
+        /**
+         * Parse a list for iteration, if we have chosen to empty nodes
+         * and the resulting node from children are empty, remove them.
+         *
+         * @param values
+         * @param key
+         * @param xmlNode
+         *
+         * @return
+         */
+        private Boolean parseList(List<Object> values, String key, DOM.XmlNode xmlNode)
+        {
+            Boolean isEmptyChild = parseMulti(new List<String>{key}, values, xmlNode);
+            if ( isEmptyChild && xmlNode.getParent() != null ) { xmlNode.getParent().removeChild(xmlNode); }
+            return isEmptyChild;
+        }
+
+        /**
+         * Parse any type for iteration, this will iterate over the other parsing
+         * methods for each of the nested elements.
+         *
+         * @param keys
+         * @param values
+         * @param xmlNode
+         *
+         * @return
+         */
+        private Boolean parseMulti(List<String> keys, List<Object> values, DOM.XmlNode xmlNode)
+        {
+            Integer notEmptyNumber = 0;
+
+            for ( Integer i = 0; i < values.size(); i++ ) {
+                // If we have a list, keep using the same key.
+                String key = setNamespace(keys.get(keys.size() - 1 > i ? i : keys.size() - 1));
+
+                // If the tag name starts with a numeric value, put an underscore at the beginning
+                // This is useful when passing object maps so that the xml remains valid.
+                key = key.left(1).isNumeric() ? '_' + key : key;
+
+                ObjectWrapper obj = new ObjectWrapper(values.get(i));
+
+                // If we have an empty list and have chosen not to suppress
+                // nulls, ensure this is added to the xml.
+                if ( obj.instanceOfList() && obj.isEmpty() && !suppressNulls ) {
+                    xmlNode.addChildElement(key, null, null);
+                }
+
+                // Convert the lists / maps, iterate over these and determine if the
+                // result was empty.
+                else if ( obj.instanceOfList() ) {
+                    notEmptyNumber += parseList(obj.toList(), key, xmlNode) ? 0 : 1;
+                }
+                else if ( obj.instanceOfMap() ) {
+                    notEmptyNumber += parseMap(
+                        obj.toMap(),
+                        xmlNode.addChildElement(key, null, null)
+                    ) ? 0 : 1;
+                }
+
+                // If we have a value don't iterate and just add the node.
+                else if ( !obj.isEmpty() ) {
+                    xmlNode
+                        .addChildElement(key, null, null)
+                        .addTextNode(obj.toString());
+                    notEmptyNumber += 1;
+                }
+
+                // If we have chosen not to suppress nulls, ensure an empty tag is there.
+                else if ( !suppressNulls ) {
+                    xmlNode.addChildElement(key, null, null);
+                    notEmptyNumber += 1;
+                }
+            }
+
+            // Return if the result was empty or not.
+            return notEmptyNumber == 0 && suppressNulls;
+        }
+
+        /**
+         * Replaces the tag name with the required prefix.
+         *
+         * @param tagName
+         *
+         * @return
+         */
+        private String setNamespace(String tagName)
+        {
+            if ( !tagName.contains('{') ) {
+                return tagName;
+            }
+
+            for ( String uri : namespaces.keySet() ) {
+                if ( tagName.contains('{' + uri + '}') ) {
+                    return tagName.replace('{' + uri + '}', namespaces.get(uri) + ':');
+                }
+            }
+
+            // If we can't find the tag, just remove the clark notation.
+            return tagName.substringAfter('}');
         }
     }
 
     /**
+     * ===============================================================================
      * The entry for the XML Reader class that deserializes to objects, lists, maps
      * and other types from a string.
      *
-     * The class uses function chaining to write to the parameters and does
+     * The class uses function chaining to write to the variables and does
      * not expose these directly.
+     * ===============================================================================
      */
     public class Reader {
 
@@ -388,12 +526,7 @@ public class XML {
             Map<String, Object> objectMap;
 
             try {
-                objectMap = (new DOMString())
-                    .setString(xmlString)
-                    .setArrayNodes(arrayNodes)
-                    .showNamespaces(showNamespaces)
-                    .parse()
-                ;
+                objectMap = parse();
             }
             catch (Exception e) {
                 throw new XmlException('The XML string is invalid, value: ' + xmlString);
@@ -507,331 +640,15 @@ public class XML {
             this.showNamespaces = false;
             return this;
         }
-    }
-
-    /**
-     * Represents a DOM element that is accessed to serialize the xml content.
-     * This DOM element calls itself recursively when accessing nested parameters.
-     */
-    public class DOMObj {
-
-        private Boolean suppressNulls;
-        private Object obj;
-        private Map<String, String> namespaces = new Map<String, String>();
 
         /**
-         * Parse the object for serialization.
-         *
-         * @param obj
+         * Entry points for the reader toObject method.
          *
          * @return
          */
-        public DOMObj setObject(Object obj)
+        private Map<String, Object> parse()
         {
-            this.obj = obj;
-            return this;
-        }
-
-        /**
-         * The entry point for the writer class.
-         *
-         * @param rootTag
-         * @param elementTag
-         * @param suppressNulls
-         *
-         * @return
-         */
-        public Dom.Document parse(String rootTag, String elementTag, Map<String, String> namespaces, Boolean suppressNulls)
-        {
-            this.obj = JSON.deserializeUntyped(JSON.serialize(this.obj, suppressNulls));
-            this.namespaces = namespaces;
-            this.suppressNulls = suppressNulls;
-
-            Dom.Document document = new Dom.Document();
-            Dom.XmlNode xmlNode = document.createRootElement(rootTag, null, null);
-
-            // Detect the type of root object we have and parse it.
-            if ( instanceOfList() && !isEmpty() ) {
-                parseList(toList(), elementTag, xmlNode);
-            }
-            else if ( instanceOfMap() && !isEmpty() ) {
-                parseMap(toMap(), xmlNode);
-            }
-
-            // Otherwise if we have primitive type, parse this.
-            else if ( !(isEmpty() && suppressNulls) ) {
-                xmlNode.addTextNode(toStringVal());
-            }
-            return document;
-        }
-
-        /**
-         * Parse a map for iteration, if we have chosen to empty nodes
-         * and the resulting node from children are empty, remove them.
-         *
-         * @param values
-         * @param xmlNode
-         *
-         * @return
-         */
-        private Boolean parseMap(Map<String, Object> values, DOM.XmlNode xmlNode)
-        {
-            Boolean isEmptyChild = parseMulti(new List<String>(values.keySet()), values.values(), xmlNode);
-            if ( isEmptyChild && xmlNode.getParent() != null ) { xmlNode.getParent().removeChild(xmlNode); }
-            return isEmptyChild;
-        }
-
-        /**
-         * Parse a list for iteration, if we have chosen to empty nodes
-         * and the resulting node from children are empty, remove them.
-         *
-         * @param values
-         * @param key
-         * @param xmlNode
-         *
-         * @return
-         */
-        private Boolean parseList(List<Object> values, String key, DOM.XmlNode xmlNode)
-        {
-            Boolean isEmptyChild = parseMulti(new List<String>{key}, values, xmlNode);
-            if ( isEmptyChild && xmlNode.getParent() != null ) { xmlNode.getParent().removeChild(xmlNode); }
-            return isEmptyChild;
-        }
-
-        /**
-         * Parse any type for iteration, this will iterate over the other parsing
-         * methods for each of the nested elements.
-         *
-         * @param keys
-         * @param values
-         * @param xmlNode
-         *
-         * @return
-         */
-        private Boolean parseMulti(List<String> keys, List<Object> values, DOM.XmlNode xmlNode)
-        {
-            Integer notEmptyNumber = 0;
-
-            for ( Integer i = 0; i < values.size(); i++ ) {
-                // If we have a list, keep using the same key.
-                String key = setNamespace(keys.get(keys.size() - 1 > i ? i : keys.size() - 1));
-
-                // If the tag name starts with a numeric value, put an underscore at the beginning
-                // This is useful when passing object maps so that the xml remains valid.
-                key = key.left(1).isNumeric() ? '_' + key : key;
-
-                DOMObj domElement = new DOMObj().setNullsSuppressed(suppressNulls)
-                    .setNamespaces(namespaces).setObject(values.get(i));
-
-                // If we have an empty list and have chosen not to suppress
-                // nulls, ensure this is added to the xml.
-                if ( domElement.instanceOfList() && domElement.isEmpty() && !suppressNulls ) {
-                    xmlNode.addChildElement(key, null, null);
-                }
-
-                // Convert the lists / maps, iterate over these and determine if the
-                // result was empty.
-                else if ( domElement.instanceOfList() ) {
-                    notEmptyNumber += parseList(domElement.toList(), key, xmlNode) ? 0 : 1;
-                }
-                else if ( domElement.instanceOfMap() ) {
-                    notEmptyNumber += parseMap(
-                        domElement.toMap(),
-                        xmlNode.addChildElement(key, null, null)
-                    ) ? 0 : 1;
-                }
-
-                // If we have a value don't iterate and just add the node.
-                else if ( !domElement.isEmpty() ) {
-                    xmlNode
-                        .addChildElement(key, null, null)
-                        .addTextNode(domElement.toStringVal());
-                    notEmptyNumber += 1;
-                }
-
-                // If we have chosen not to suppress nulls, ensure an empty tag is there.
-                else if ( !suppressNulls ) {
-                    xmlNode.addChildElement(key, null, null);
-                    notEmptyNumber += 1;
-                }
-            }
-
-            // Return if the result was empty or not.
-            return notEmptyNumber == 0 && suppressNulls;
-        }
-
-        /**
-         * Replaces the tag name with the required prefix.
-         *
-         * @param tagName
-         *
-         * @return
-         */
-        private String setNamespace(String tagName)
-        {
-            if ( !tagName.contains('{') ) {
-                return tagName;
-            }
-
-            for ( String uri : namespaces.keySet() ) {
-                if ( tagName.contains('{' + uri + '}') ) {
-                    return tagName.replace('{' + uri + '}', namespaces.get(uri) + ':');
-                }
-            }
-
-            // If we can't find the tag, just remove the clark notation.
-            return tagName.substringAfter('}');
-        }
-
-        /**
-         * Determines if the current object should suppress nulls.
-         *
-         * @param suppressNulls
-         *
-         * @return
-         */
-        private DOMObj setNullsSuppressed(Boolean suppressNulls)
-        {
-            this.suppressNulls = suppressNulls;
-            return this;
-        }
-
-        /**
-         * Sets the namespaces that will be added to the xml.
-         *
-         * @param namespaces
-         *
-         * @return
-         */
-        private DOMObj setNamespaces(Map<String, String> namespaces)
-        {
-            this.namespaces = namespaces;
-            return this;
-        }
-
-        /**
-         * Returns if the current object is a list.
-         *
-         * @return
-         */
-        private Boolean instanceOfList()
-        {
-            return obj instanceof List<Object>;
-        }
-
-        /**
-         * Returns if the current object is a map.
-         *
-         * @return
-         */
-        private Boolean instanceOfMap()
-        {
-            return obj instanceof Map<String, Object>;
-        }
-
-        /**
-         * Converts the current object to a list.
-         *
-         * @return
-         */
-        private Map<String, Object> toMap()
-        {
-            return (Map<String, Object>) obj;
-        }
-
-        /**
-         * Converts the current object to a map.
-         *
-         * @return
-         */
-        private List<Object> toList()
-        {
-            return (List<Object>) obj;
-        }
-
-        /**
-         * Returns if the object we have is empty regardless of its type.
-         *
-         * @return
-         */
-        private Boolean isEmpty()
-        {
-            if ( obj instanceof Map<String, Object> ) { return ((Map<String, Object>) obj).isEmpty(); }
-            if ( obj instanceof List<Object> ) { return ((List<Object>) obj).isEmpty(); }
-            return obj == null || obj == '';
-        }
-
-        /**
-         * Converts the object to a string value.
-         *
-         * @return
-         */
-        private String toStringVal()
-        {
-            if ( isEmpty() ) { return ''; }
-            return String.valueOf(obj);
-        }
-    }
-
-    /**
-     * Represents a string that is used to deserialize the xml content.
-     * This DOM string calls itself recursively when accessing nested values.
-     */
-    public class DOMString
-    {
-        private String xmlString;
-        private Set<String> arrayNodes = new Set<String>();
-        private Map<String, Object> namespaceMap = new Map<String, Object>();
-        private Boolean showNamespaces = false;
-
-        /**
-         * Sets what nodes should be treated as arrays even if not detected as one.
-         *
-         * @param arrayNodes
-         *
-         * @return
-         */
-        public DOMString setArrayNodes(Set<String> arrayNodes)
-        {
-            this.arrayNodes = arrayNodes;
-            return this;
-        }
-
-        /**
-         * Set the xml string for deserialization.
-         *
-         * @param xmlString
-         *
-         * @return
-         */
-        public DOMString setString(String xmlString)
-        {
-            this.xmlString = xmlString;
-            return this;
-        }
-
-        /**
-         * Sets whether or not to display the namespaces using clark notations or hide them completely.
-         *
-         * @param xmlString
-         *
-         * @return
-         */
-        public DOMString showNamespaces(Boolean showNamespaces)
-        {
-            this.showNamespaces = showNamespaces;
-            return this;
-        }
-
-        /**
-         * Entry points for the reader class.
-         *
-         * @return
-         */
-        public Map<String, Object> parse()
-        {
-            XmlStreamReader reader = new XmlStreamReader(xmlString);
-            return (Map<String, Object>) parseNested(reader, null);
+            return (Map<String, Object>) parseNested(new XmlStreamReader(xmlString), null);
         }
 
         /**
@@ -873,8 +690,8 @@ public class XML {
                     // Otherwise turn our map into a list.
                     else {
                         objectMap.put(tagName, new List<Object>{
-                            objectMap.get(tagName),
-                            objectCurrent
+                                objectMap.get(tagName),
+                                objectCurrent
                         });
                     }
                 }
@@ -893,6 +710,181 @@ public class XML {
                 if ( hasNext ) { reader.next(); }
             }
             return objectMap.isEmpty() ? null : objectMap;
+        }
+    }
+
+    /**
+    * ===============================================================================
+     * The ObjectWrapper class is used to apply useful functions on top of the
+     * object such as converting the type, detecting the type of object and sanitization.
+     * ===============================================================================
+     */
+    private class ObjectWrapper {
+
+        private Object obj;
+
+        /**
+         * Parse the object for serialization.
+         *
+         * @param obj
+         *
+         * @return
+         */
+        public ObjectWrapper(Object obj)
+        {
+            this.obj = obj;
+        }
+
+        /**
+         * Returns if the current object is a list.
+         *
+         * @return
+         */
+        public Boolean instanceOfList()
+        {
+            return obj instanceof List<Object>;
+        }
+
+        /**
+         * Returns if the current object is a map.
+         *
+         * @return
+         */
+        public Boolean instanceOfMap()
+        {
+            return obj instanceof Map<String, Object>;
+        }
+
+        /**
+         * Returns if the current object is a sobject list.
+         *
+         * @return
+         */
+        public Boolean instanceOfSObjectList()
+        {
+            return obj instanceof List<SObject>;
+        }
+
+        /**
+         * Returns if the current object is a sobject map.
+         *
+         * @return
+         */
+        public Boolean instanceOfSObjectMap()
+        {
+            return obj instanceof Map<Id, SObject>;
+        }
+
+        /**
+         * Returns if the current object is an sobject.
+         *
+         * @return
+         */
+        public Boolean instanceOfSObject()
+        {
+            return obj instanceof SObject;
+        }
+
+        /**
+         * If an SObject list, map, single object have been detected this can be used
+         * to return the describe of this so we can get its name and other details.
+         *
+         * @return
+         */
+        public DescribeSObjectResult getSObjectDescribe()
+        {
+            if ( instanceOfSObjectList() ) {
+                return toSObjectList().getSObjectType().getDescribe();
+            }
+            else if ( instanceOfSObjectMap() ) {
+                return toSObjectMap().values().getSObjectType().getDescribe();
+            }
+            else {
+                return toSObject().getSObjectType().getDescribe();
+            }
+        }
+
+        /**
+         * Converts the current object to a list.
+         *
+         * @return
+         */
+        public Map<String, Object> toMap()
+        {
+            return (Map<String, Object>) obj;
+        }
+
+        /**
+         * Converts the current object to a map.
+         *
+         * @return
+         */
+        public List<Object> toList()
+        {
+            return (List<Object>) obj;
+        }
+
+        /**
+         * Converts the current object to a sobject list.
+         *
+         * @return
+         */
+        public Map<Id, SObject> toSObjectMap()
+        {
+            return (Map<Id, SObject>) obj;
+        }
+
+        /**
+         * Converts the current object to a sobject map.
+         *
+         * @return
+         */
+        public List<SObject> toSObjectList()
+        {
+            return (List<SObject>) obj;
+        }
+
+        /**
+         * Converts the current to an sobject.
+         *
+         * @return
+         */
+        public SObject toSObject()
+        {
+            return (SObject) obj;
+        }
+
+        /**
+         * Returns if the object we have is empty regardless of its type.
+         *
+         * @return
+         */
+        public Boolean isEmpty()
+        {
+            if ( obj instanceof Map<String, Object> ) { return ((Map<String, Object>) obj).isEmpty(); }
+            if ( obj instanceof List<Object> ) { return ((List<Object>) obj).isEmpty(); }
+            return obj == null || obj == '';
+        }
+
+        /**
+         * Converts the object to a string value.
+         *
+         * @return
+         */
+        public override String toString()
+        {
+            if ( isEmpty() ) { return ''; }
+            return String.valueOf(obj);
+        }
+
+        /**
+         * Converts the object to an untyped objected.
+         *
+         * @return
+         */
+        public ObjectWrapper toUntyped()
+        {
+            return new ObjectWrapper(JSON.deserializeUntyped(JSON.serialize(obj, false)));
         }
     }
 }
