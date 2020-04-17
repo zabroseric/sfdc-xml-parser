@@ -499,7 +499,8 @@ public class XML {
     public class Reader {
 
         private String xmlString;
-        private Type apexType = null;
+        private Type apexType;
+        private String apexTypeName;
         private Set<String> arrayNodes = new Set<String>();
         private Boolean showNamespaces = true;
 
@@ -532,19 +533,29 @@ public class XML {
                 throw new XmlException('The XML string is invalid, value: ' + xmlString);
             }
 
+
             // If we haven't passed a type, return the map we have.
             if ( apexType == null ) {
                 return objectMap;
             }
 
-            // If the apex type is a partial key within the map, use this as the base for
-            // our deserialization so we are able to correctly map to the type.
-            else if ( objectMap.containsKey(apexType.getName().substringAfter('.')) ) {
-                return JSON.deserialize(JSON.serialize(objectMap.get(apexType.getName().substringAfter('.'))), apexType);
+            // If the type is deserializable and we have found the type as a key in the map,
+            // return the value of this key.
+            else if ( ((Type) Deserializable.class).isAssignableFrom(apexType) && objectMap.containsKey(apexTypeName) ) {
+                return ((Deserializable) apexType.newInstance()).xmlDeserialize((Object) objectMap.get(apexTypeName));
             }
 
-            // If the apex type we have is a list, get the first instance of a list
-            // from the map.
+            // Otherwise if the type is deserializable, pass the entire map.
+            else if ( ((Type) Deserializable.class).isAssignableFrom(apexType) ) {
+                return ((Deserializable) apexType.newInstance()).xmlDeserialize(objectMap);
+            }
+
+            // If the apex type is a partial key with the map use that, this is useful for nested classes.
+            else if ( objectMap.containsKey(apexTypeName) ) {
+                return JSON.deserialize(JSON.serialize(objectMap.get(apexTypeName)), apexType);
+            }
+
+            // If the apex type we have is a list, get the list from the map.
             else if ( apexType.toString().startsWith('List') ) {
                 return JSON.deserialize('[' + JSON.serialize(objectMap).substringAfter('[').substringBeforeLast(']') + ']', apexType);
             }
@@ -587,6 +598,15 @@ public class XML {
         public Reader setType(Type apexType)
         {
             this.apexType = apexType;
+
+
+            // If the apex type is a partial key with the map use that, this is useful for nested classes.
+            if ( apexType != null && apexType.getName().contains('.') ) {
+                apexTypeName = apexType.getName().substringAfter('.');
+            }
+            else if ( apexType != null ) {
+                apexTypeName = apexType.getName();
+            }
             return this;
         }
 
@@ -670,6 +690,7 @@ public class XML {
             if ( hasNext ) { reader.next(); }
 
             while( hasNext ) {
+                // Add the clark notation to the tag name if we have a namespace.
                 tagName = ( showNamespaces && reader.getNamespace() != null ? '{' + reader.getNamespace() + '}' : '') + reader.getLocalName();
 
                 if ( reader.getEventType() == XmlTag.START_ELEMENT ) {
@@ -690,8 +711,8 @@ public class XML {
                     // Otherwise turn our map into a list.
                     else {
                         objectMap.put(tagName, new List<Object>{
-                                objectMap.get(tagName),
-                                objectCurrent
+                            objectMap.get(tagName),
+                            objectCurrent
                         });
                     }
                 }
@@ -711,6 +732,17 @@ public class XML {
             }
             return objectMap.isEmpty() ? null : objectMap;
         }
+    }
+
+    /**
+     * ===============================================================================
+     * The Deserializable interface is used when passing the apex type.
+     * This allows the parsing of an map, list or string into the method.
+     * ===============================================================================
+     */
+    public interface Deserializable {
+
+        Object xmlDeserialize(Object objMap);
     }
 
     /**

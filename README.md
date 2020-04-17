@@ -21,11 +21,10 @@ When working with Apex there are often limitations that you would often expect t
 * Serialise / Deserialize Apex Objects
 * Tag and Value Sanitization
 
-## Usage
+## Usage - Serialization
 The methods below show examples of common cases when parsing xml, and how you may go around this. Check out the [Other Cool Stuff](#other-cool-stuff) area for details on various pieces of functionality that can be used to alter the xml characteristics.
 
-### Serialization
-#### SObject
+### SObject
 ```java
 Contact contact = new Contact(
     FirstName = 'First',
@@ -49,7 +48,7 @@ Result
 </Contact>
 ```
 
-#### SObject List
+### SObject List
 ```java
 List<Contact> contacts = new List<Contact>{
     new Contact(
@@ -90,7 +89,7 @@ Result
 </Contacts>
 ```
 
-#### Objects
+### Objects
 ```java
 Library libraryObject = new Library(
     new Catalog(
@@ -132,7 +131,7 @@ Result
 </library>
 ```
 
-#### Maps
+### Maps
 Optionally, we're able to specify the default root and element.
 If one isn't specified the default is: <elements><element></element></elements>
 ```java
@@ -150,33 +149,33 @@ Result
 </elements>
 ```
 
-### Deserialization
-#### SObject
+## Usage - Deserialization
+### SObject
 ```java
 Contact contact = (Contact) XML.deserialize('<Contact><attributes><type>Contact</type><url>/services/data/v48.0/sobjects/Contact/0032w000005DrR2AAK</url></attributes><FirstName>First</FirstName><LastName>Last</LastName><Id>0032w000005DrR2AAK</Id></Contact>')
     .setType(Contact.class).toObject();
 ```
 
-#### SObject List
+### SObject List
 ```java
 List<Contact> contactResult = (List<Contact>) XML.deserialize('<Contacts><Contact><attributes><type>Contact</type><url>/services/data/v48.0/sobjects/Contact/0032w000005DrQxAAK</url></attributes><FirstName>First1</FirstName><LastName>Last1</LastName><Id>0032w000005DrQxAAK</Id></Contact><Contact><attributes><type>Contact</type><url>/services/data/v48.0/sobjects/Contact/0032w000005DrQyAAK</url></attributes><FirstName>First2</FirstName><LastName>Last2</LastName><Id>0032w000005DrQyAAK</Id></Contact></Contacts>')
     .setType(List<Contact>.class).toObject();
 ```
 
-#### Objects
+### Objects
 ```java
 Library library = XML.deserialize('<library><catalog><books><book><title>title1</title><price>23.00</price><authors><author>Name1</author><author>Name2</author></authors></book><book><title>title1</title><price>23.00</price><authors><author>Name3</author><author>Name4</author></authors></book></books></catalog></library>', Library.class)
     .toObject();
 ```
 
-#### Maps
+### Maps
 ```java
 Map<String, Object> objectMap = (Map<String, Object>) XML.deserialize('<elements><key2>val2</key2><key1>val1</key1></elements>')
     .setArrayNode('elements').toObject();
 ```
 
 ## <a name="other-cool-stuff"></a> Other Cool Stuff
-#### Array Nodes
+### Array Nodes
 As true reflection is not support in Apex, there is no way to detect if an xml tag should truly be an array or a map. As a solution, we can specify what tags should be treated as an array when deserialized.
 
 The below gives an example of a library, where the books tag will not be treated as an array as there is only one child element.
@@ -201,7 +200,7 @@ Library library = (Library) XML.deserialize('<library><catalog><books><book><tit
 ```
 
 
-#### Debugging
+### Debugging
 Debugging can become a bit of a pain. We have the option of using checkpoints, debug logs and various other tools to help. In addition to this process, we can debug the serialized xml at any point before or after altering any settings using function chaining.
 
 Using both the beautifying and encoding methods above we can achieve the following:
@@ -235,7 +234,7 @@ Debug 2
 </Contact>
 ```
 
-#### Suppressing Nulls
+### Suppressing Nulls
 We needing to suppress empty tags, this doesn't just operate within the current tag but is able to work up the dom tree. In the example with the library, if we have a book that has no information in it, even if an empty object is assigned, the book will not be present within the xml.
 
 ```java
@@ -274,7 +273,7 @@ Result
 </library>
 ```
 
-#### Clark Notations
+### Clark Notations
 Although the library does not work heavily off clark notations when writing xml, it does support the ability of specifying both the xml namespace and 'localname'.
 For more information please see the link [here](http://www.jclark.com/xml/xmlns.htm).
 
@@ -296,11 +295,35 @@ The result gets transformed to valid xml:
 </element>
 ```
 
+### Deserialization Interfaces
+By default deserialization is handled through the native JSON.deserialize method if an apex type is specified.
+However, if the apex type extends the XML.Deserializable interface, the class method xmlDeserialize will be used.
+
+The method will be passed either a list, map or string based on what is located inside the XML content.
+
+An example of this can be seen below:
+```
+public class Book implements XML.Deserializable {
+    public String title;
+    public String price;
+
+    public Book xmlDeserialize(Object obj)
+    {
+        title = (String) ((Map<String, Object>) objMap).get('title');
+        price = (String) ((Map<String, Object>) objMap).get('price');
+        return this;
+    }
+}
+
+Book book = (Book) XML.deserialize('<Book><title>Title ABC</title><price>23.00</price></Book>', Catalog.class);
+```
+
 ## To-Do List
 * Array nodes can't be specified with their a full path name
-* Custom element parsers
 * Namespace filtering
-* Deserialization interfaces
+
+## Limitation
+Unfortunately Apex does not support class reflection. This limits the ability to abstract and support additional functionality that would otherwise be possible..
 
 ## Contributing
 If you find that you need to extend the library and this would be great for others to have this, feel free to contribute!

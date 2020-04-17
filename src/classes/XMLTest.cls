@@ -634,9 +634,41 @@ private class XMLTest {
         );
     }
 
+    @IsTest
+    public static void serializeDeserializerBook()
+    {
+        Book bk = new Book('title5', null, '23.00');
+
+        String xmlString = XML.serialize(bk).setRootTag('Book').toString();
+        System.assertEquals(String.valueOf(bk),
+            String.valueOf(XML.deserialize(xmlString, Book.class))
+        );
+    }
+
+    @IsTest
+    public static void serializeDeserializerBookUnknownRoot()
+    {
+        Book bk = new Book('title5', null, '23.00');
+
+        String xmlString = XML.serialize(bk).setRootTag('Unknown').toString();
+        System.assertEquals(String.valueOf(new Book()),
+            String.valueOf(XML.deserialize(xmlString, Book.class))
+        );
+    }
+
+    @IsTest
+    public static void serializeDeserializerCatalogInvalid()
+    {
+        System.assertEquals(String.valueOf(new Catalog()),
+            String.valueOf(XML.deserialize('<unknown />', Catalog.class))
+        );
+    }
+
 
     private class Library {
         public Catalog catalog;
+
+        public Library() {}
 
         public Library(Catalog catalog)
         {
@@ -647,6 +679,8 @@ private class XMLTest {
     private class Catalog {
         public Books books;
 
+        public Catalog() {}
+
         public Catalog(Books books)
         {
             this.books = books;
@@ -656,16 +690,20 @@ private class XMLTest {
     private class Books {
         public List<Book> book;
 
+        public Books() {}
+
         public Books(List<Book> book)
         {
             this.book = book;
         }
     }
 
-    private class Book {
+    private class Book implements XML.Deserializable {
         public String title;
         public Authors authors;
         public String price;
+
+        public Book() {}
 
         public Book(String title, Authors authors, String price)
         {
@@ -673,10 +711,19 @@ private class XMLTest {
             this.authors = authors;
             this.price = price;
         }
+
+        public Book xmlDeserialize(Object objMap)
+        {
+            title = (String) ((Map<String, Object>) objMap).get('title');
+            price = (String) ((Map<String, Object>) objMap).get('price');
+            return this;
+        }
     }
 
     private class Authors {
         public List<String> author;
+
+        public Authors() {}
 
         public Authors(List<String> author)
         {
