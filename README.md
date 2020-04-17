@@ -326,8 +326,12 @@ When parsing XML the namespaces can be filtered to the namespace relevant to the
 To do this, the filterNamespace method can be used.
 
 ```java
-XML.deserialize('<element xmlns:a="http://example.org" xmlns:b="http://example1.org"><a:localname2>val2</a:localname2><b:localname1>val1</b:localname1></element>')
-        .filterNamespace('http://example.org').debug();
+XML.deserialize(
+  '<element xmlns:a="http://example.org" xmlns:b="http://example1.org">'
+    + '<a:localname2>val2</a:localname2>'
+    + '<b:localname1>val1</b:localname1>'
++ '</element>')
+    .filterNamespace('http://example.org').debug();
 ``` 
 
 Debug
