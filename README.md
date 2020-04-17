@@ -20,6 +20,9 @@ When working with Apex there are often limitations that you would often expect t
 * SObject Tag Detection
 * Serialise / Deserialize Apex Objects
 * Tag and Value Sanitization
+* Clark Notations
+* Deserialization Interfaces
+* Namespace Filtering 
 
 ## Usage - Serialization
 The methods below show examples of common cases when parsing xml, and how you may go around this. Check out the [Other Cool Stuff](#other-cool-stuff) area for details on various pieces of functionality that can be used to alter the xml characteristics.
@@ -302,7 +305,7 @@ However, if the apex type extends the XML.Deserializable interface, the class me
 The method will be passed either a list, map or string based on what is located inside the XML content.
 
 An example of this can be seen below:
-```
+```java
 public class Book implements XML.Deserializable {
     public String title;
     public String price;
@@ -315,15 +318,25 @@ public class Book implements XML.Deserializable {
     }
 }
 
-Book book = (Book) XML.deserialize('<Book><title>Title ABC</title><price>23.00</price></Book>', Catalog.class);
+Book book = (Book) XML.deserialize('<Book><title>Title ABC</title><price>23.00</price></Book>', Book.class);
 ```
 
-## To-Do List
-* Array nodes can't be specified with their a full path name
-* Namespace filtering
+### Namespace Filtering
+When parsing XML the namespaces can be filtered to the namespace relevant to the application.
+To do this, the filterNamespace method can be used.
 
-## Limitation
-Unfortunately Apex does not support class reflection. This limits the ability to abstract and support additional functionality that would otherwise be possible..
+```java
+XML.deserialize('<element xmlns:a="http://example.org" xmlns:b="http://example1.org"><a:localname2>val2</a:localname2><b:localname1>val1</b:localname1></element>')
+        .filterNamespace('http://example.org').debug();
+``` 
+
+Debug
+```text
+{element={{http://example.org}localname2=val2}}
+```
+
+## Limitations
+Unfortunately Apex does not support class reflection. This limits the ability to abstract and support additional functionality that would otherwise be possible in other languages. However, as updates are being made all the time, the library will be updated accordingly.
 
 ## Contributing
 If you find that you need to extend the library and this would be great for others to have this, feel free to contribute!

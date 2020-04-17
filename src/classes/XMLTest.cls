@@ -507,6 +507,25 @@ private class XMLTest {
     }
 
     @IsTest
+    private static void serializeDeserializeFilterNamespaces()
+    {
+        String xmlString = XML.serialize(new List<Object>{
+            new Map<String, String>{
+                '{http://example1.org}a' => 'b',
+                '{http://example2.org}c' => 'd',
+                'e' => 'f'
+            }
+        }).setNamespaces(new Map<String, String>{'http://example1.org' => 'p1', 'http://example2.org' => 'p2'}).toString();
+
+        System.assertEquals(new Map<String, Object>{
+            'element' => new Map<String, String>{
+                '{http://example1.org}a' => 'b',
+                'e' => 'f'
+            }
+        }, XML.deserialize(xmlString).filterNamespace('http://example1.org').toObject());
+    }
+
+    @IsTest
     private static void deserializeDebug()
     {
         XML.deserialize('<elements>abc</elements>').debug();

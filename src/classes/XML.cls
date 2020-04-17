@@ -503,6 +503,7 @@ public class XML {
         private String apexTypeName;
         private Set<String> arrayNodes = new Set<String>();
         private Boolean showNamespaces = true;
+        private String filterNamespace;
 
         /**
          * Pass the xml string for deserialization.
@@ -532,7 +533,6 @@ public class XML {
             catch (Exception e) {
                 throw new XmlException('The XML string is invalid, value: ' + xmlString);
             }
-
 
             // If we haven't passed a type, return the map we have.
             if ( apexType == null ) {
@@ -639,6 +639,20 @@ public class XML {
         }
 
         /**
+         * Filter the namespaces so that either namespaces that are empty
+         * or that do not have a namespace are returned.
+         *
+         * @param filterNamespace
+         *
+         * @return
+         */
+        public Reader filterNamespace(String filterNamespace)
+        {
+            this.filterNamespace = filterNamespace;
+            return this;
+        }
+
+        /**
          * Shows namespaces as clark notations.
          *
          * @return
@@ -648,7 +662,6 @@ public class XML {
             this.showNamespaces = true;
             return this;
         }
-
 
         /**
          * Hide namespaces and show only the tag name.
@@ -693,6 +706,7 @@ public class XML {
                 // Add the clark notation to the tag name if we have a namespace.
                 tagName = ( showNamespaces && reader.getNamespace() != null ? '{' + reader.getNamespace() + '}' : '') + reader.getLocalName();
 
+                // If we have a start element add this.
                 if ( reader.getEventType() == XmlTag.START_ELEMENT ) {
                     objectCurrent = parseNested(reader, tagName);
 
@@ -715,6 +729,12 @@ public class XML {
                             objectCurrent
                         });
                     }
+
+                    // If we have chosen to filter the namespace remove the node we generated.
+                    // This way we still loop through the reader.
+                    if ( filterNamespace != null && tagName.contains('{') && !tagName.contains(filterNamespace) ) {
+                        objectMap.remove(tagName);
+                    }
                 }
 
                 // We we are ending our starting tag break this loop.
@@ -722,7 +742,7 @@ public class XML {
                     break;
                 }
 
-                // If we have text return that.
+                // If we have text return and the namespace is valid, return it.
                 else if ( reader.getEventType() == XmlTag.CHARACTERS ) {
                     return reader.getText();
                 }
