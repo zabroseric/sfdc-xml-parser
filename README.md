@@ -18,7 +18,7 @@ When working with Apex there are often limitations that you would often expect t
 ## Features
 * Function Chaining
 * SObject Tag Detection
-* Serialise / Deserialize Apex Objects
+* Serialize / Deserialize Apex Classes
 * Tag and Value Sanitization
 * Clark Notations
 * Deserialization Interfaces
