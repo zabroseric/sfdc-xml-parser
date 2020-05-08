@@ -681,7 +681,9 @@ public class XML {
          */
         private Map<String, Object> parse()
         {
-            return (Map<String, Object>) parseNested(new XmlStreamReader(xmlString), null);
+            XmlStreamReader xmlStreamReader = new XmlStreamReader(xmlString);
+            xmlStreamReader.setCoalescing(true);
+            return (Map<String, Object>) parseNested(xmlStreamReader, null);
         }
 
         /**

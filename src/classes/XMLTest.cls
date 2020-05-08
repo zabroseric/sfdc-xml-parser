@@ -303,6 +303,13 @@ private class XMLTest {
     }
 
     @IsTest
+    private static void deserializeSpecialCharacters()
+    {
+        Object obj = XML.deserialize('<element>&lt;&gt;</element>').toObject();
+        System.assertEquals(new Map<String, String>{'element' => '<>'}, obj);
+    }
+
+    @IsTest
     private static void deserializeEmptyList()
     {
         Object obj = XML.deserialize('<elements></elements>').toObject();
