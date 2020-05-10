@@ -343,7 +343,7 @@ Debug
 Unfortunately Apex does not support class reflection. This limits the ability to abstract and support additional functionality that would otherwise be possible in other languages. However, as updates are being made all the time, the library will be updated accordingly.
 
 ## Contributing
-If you find that you need to extend the library and this would be great for others to have this, feel free to contribute!
-Just make sure that any changes follow the current formatting standards, covered under unit tested and this is documented well.
+If you would like to extend or make changes to the library, it would be great to share it with others.
+Just make sure that any changes follow the current formatting standards, covered under unit tested and is well documented.
 
-After all it's all about helping each other out. :)
+After all it's all about helping each other out, and sharing these things. :)
