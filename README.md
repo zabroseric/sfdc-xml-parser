@@ -13,7 +13,7 @@ Built Status:
 | [![Deploy](https://deploy-to-sfdx.com/dist/assets/images/DeployToSFDX.svg)](https://deploy-to-sfdx.com) | [![Deploy](https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/deploy.png)](https://githubsfdeploy.herokuapp.com/?owner=zabroseric&repo=sfdc-xml-parser&ref=master) |
 
 ## Overview
-When working with Apex there are often limitations that you would often expect to be resolved with larger frameworks. One of which is the ability to easily work with various APIs using XML. Although JSON is a defacto standard these days for web integration, it can be difficult to sole rely on this, especially when integrating with older or larger ERP systems. In an effort to fill this gap in functionality, the xml parser library provides conversion between objects, sobjects and primitive types back-and-fourth to XML. The intention is to provide easy parsing of XML, without manually mapping from XML or writing to XML nodes directly.
+When working with Apex there can be limitations, one of which is using XML when integrating with APIs. Although JSON has become a defacto standard, it can be difficult to sole rely on this, especially when working with larger / older systems. In an effort to fill this gap in functionality, the xml parser library provides back-and-fourth XML conversion with objects, sobjects and primitive types. The intention is to provide easy parsing of XML, whilst boasting of functionality where required.
 
 ## Features
 * Function Chaining
