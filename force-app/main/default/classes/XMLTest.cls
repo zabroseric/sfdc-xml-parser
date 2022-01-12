@@ -697,6 +697,34 @@ private class XMLTest {
         );
     }
 
+    @IsTest
+    public static void deserializeObject()
+    {
+        Library library = (Library) XML.deserialize(
+        '<library><catalog><books><book><title>title1</title><price>23.00</price><authors><author>Name1</author><author>Name2</author></authors></book><book><title>title2</title><price>23.00</price><authors><author>Name3</author><author>Name4</author></authors></book><book><title>title5</title><price /><authors><author /></authors></book></books></catalog></library>'
+        ).setType(Library.class).toObject();
+
+        System.assertEquals('title1', library.catalog.books.book[0].title);
+        System.assertEquals(JSON.serialize(new Authors(new List<String>{'Name1', 'Name2'})), JSON.serialize(library.catalog.books.book[0].authors));
+        System.assertEquals('23.00', library.catalog.books.book[0].price);
+
+        System.assertEquals('title2', library.catalog.books.book[1].title);
+        System.assertEquals(JSON.serialize(new Authors(new List<String>{'Name3', 'Name4'})), JSON.serialize(library.catalog.books.book[1].authors));
+        System.assertEquals('23.00', library.catalog.books.book[1].price);
+    }
+
+    @IsTest
+    public static void deserializeObjectArrayNodeError()
+    {
+        try {
+            XML.deserialize(
+            '<library><catalog><books><book><title>title1</title><price>23.00</price><authors><author>Name1</author><author>Name2</author></authors></book><book><title>title2</title><price>23.00</price><authors><author>Name4</author></authors></book><book><title>title5</title><price /><authors><author /></authors></book></books></catalog></library>'
+            ).setType(Library.class).toObject();
+            System.assert(false);
+        } catch (XmlException e) {
+            System.assertEquals('An array node has not been correctly set by value "Name4"', e.getMessage());
+        }
+    }
 
     private class Library {
         public Catalog catalog;

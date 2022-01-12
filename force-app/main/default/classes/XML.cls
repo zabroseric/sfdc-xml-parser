@@ -527,7 +527,25 @@ public class XML {
          *
          * @return
          */
-        public Object toObject()
+        public Object toObject() {
+            try {
+                return toObjectInternal();
+            } catch (JSONException e) {
+                if ( e.getMessage().contains('Expected List') ) {
+                    throw new XmlException('An array node has not been correctly set by value ' +
+                        e.getMessage().replaceAll('.+(".+").+', '$1')
+                    );
+                }
+                throw e;
+            }
+        }
+
+        /**
+         * Converts the xml string to an Object.
+         *
+         * @return
+         */
+        private Object toObjectInternal()
         {
             Map<String, Object> objectMap;
 
@@ -545,8 +563,8 @@ public class XML {
 
             // If the type is deserializable and we have found the type as a key in the map,
             // return the value of this key.
-            else if ( ((Type) Deserializable.class).isAssignableFrom(apexType) && objectMap.containsKey(apexTypeName) ) {
-                return ((Deserializable) apexType.newInstance()).xmlDeserialize((Object) objectMap.get(apexTypeName));
+            else if ( ((Type) Deserializable.class).isAssignableFrom(apexType) && new Utils().containsCaseInsensitive(objectMap, apexTypeName) ) {
+                return ((Deserializable) apexType.newInstance()).xmlDeserialize((Object) new Utils().getObjCaseInsensitive(objectMap, apexTypeName));
             }
 
             // Otherwise if the type is deserializable, pass the entire map.
@@ -555,8 +573,8 @@ public class XML {
             }
 
             // If the apex type is a partial key with the map use that, this is useful for nested classes.
-            else if ( objectMap.containsKey(apexTypeName) ) {
-                return JSON.deserialize(JSON.serialize(objectMap.get(apexTypeName)), apexType);
+            else if ( new Utils().containsCaseInsensitive(objectMap, apexTypeName) ) {
+                return JSON.deserialize(JSON.serialize(new Utils().getObjCaseInsensitive(objectMap, apexTypeName)), apexType);
             }
 
             // If the apex type we have is a list, get the list from the map.
@@ -767,8 +785,68 @@ public class XML {
      * ===============================================================================
      */
     public interface Deserializable {
-
         Object xmlDeserialize(Object objMap);
+    }
+
+    /**
+    * ===============================================================================
+     * The Utils class is a set of useful functions that can be used without
+     * injecting another library.
+     * ===============================================================================
+     */
+    private class Utils {
+
+        /**
+         * Determines if the key is contained within the map via a case-insensitive comparison.
+         *
+         * @param objs
+         * @param key
+         *
+         * @return
+         */
+        public Boolean containsCaseInsensitive(Map<String, Object> objs, String key) {
+            return this.getObjCaseInsensitive(objs, key) != null;
+        }
+
+        /**
+         * Returns the object of a map via a key that is insensitive.
+         *
+         * @param objs
+         * @param key
+         *
+         * @return
+         */
+        public Object getObjCaseInsensitive(Map<String, Object> objs, String key) {
+            return objs.get(this.getKeyCaseInsensitive(objs, key));
+        }
+
+        /**
+         * Returns the key of a map via a key that is insensitive.
+         *
+         * @param objs
+         * @param key
+         *
+         * @return
+         */
+        public String getKeyCaseInsensitive(Map<String, Object> objs, String key) {
+            return this.getKeySetCaseMap(objs).get(key.toLowerCase());
+        }
+
+        /**
+         * Returns a key set map in the following format.
+         * key lower case => key
+         *
+         * @param objs
+         *
+         * @return
+         */
+        public Map<String, String> getKeySetCaseMap(Map<String, Object> objs) {
+            Map<String, String> keySetCaseMap = new Map<String, String>();
+            for ( String key : objs.keySet() ) {
+                keySetCaseMap.put(key.toLowerCase(), key);
+            }
+            return keySetCaseMap;
+        }
     }
 
     /**
