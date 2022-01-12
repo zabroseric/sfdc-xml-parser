@@ -136,8 +136,7 @@ Result
 ```
 
 ### Maps
-Optionally, we're able to specify the default root and element.
-If one isn't specified the default is: <elements><element></element></elements>
+Alternatively, instead of serializing an object we can work directly with maps. If a root element isn't specified, it will default to either **element** or **elements** depending on if the root is a collection of items.
 ```java
 String xmlString = XML.serialize(new Map<String, String>{
     'key1' => 'val1',
