@@ -127,6 +127,10 @@ public class XML {
                 xmlString = xmlString.left(xmlString.length() - 3 - rootTag.length())
                     .replace('<' + elementTag + '>', '').replace('<' + rootTag, '<' + elementTag);
             }
+
+            // If there are attributes in the closing tags, remove them.
+            xmlString = xmlString.replaceAll('</([^> ]+) [^>]+="[^>]+">', '</$1>');
+
             return beautify ? formatString(xmlString) : xmlString;
         }
 
@@ -514,7 +518,7 @@ public class XML {
          */
         public Reader read(String xmlString)
         {
-            this.xmlString = xmlString;
+            this.xmlString = xmlString != null ? xmlString.replaceAll('>\\s+<', '><') : null;
             return this;
         }
 

@@ -296,6 +296,13 @@ private class XMLTest {
     }
 
     @IsTest
+    private static void deserializeEmptyNewLine()
+    {
+        Object obj = XML.deserialize('<element>\r\n</element>').toObject();
+        System.assertEquals(new Map<String, String>{'element' => null}, obj);
+    }
+
+    @IsTest
     private static void deserializeOneElement()
     {
         Object obj = XML.deserialize('<element>a</element>').toObject();
