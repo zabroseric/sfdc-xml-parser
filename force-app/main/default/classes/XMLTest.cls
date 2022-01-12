@@ -146,6 +146,28 @@ private class XMLTest {
     }
 
     @IsTest
+    private static void deserializeReservedWordStandard()
+    {
+        SpecialBookDateTime_x specialBook = (SpecialBookDateTime_x) XML.deserialize(
+        '<SpecialBookDateTime_x><Date>2019-01-28</Date><Time>11:00:09Z</Time></SpecialBookDateTime_x>'
+        ).setType(SpecialBookDateTime_x.class).toObject();
+
+        System.assertEquals(Date.newInstance(2019, 1, 28), specialBook.date_x);
+        System.assertEquals(Time.newInstance(11, 0, 9, 0), specialBook.time_x);
+    }
+
+    @IsTest
+    private static void deserializeReservedWordCustom()
+    {
+        SpecialBookDateTime_AnotherSuffix specialBook = (SpecialBookDateTime_AnotherSuffix) XML.deserialize(
+        '<SpecialBookDateTime_AnotherSuffix><Date>2019-01-28</Date><Time>11:00:09Z</Time></SpecialBookDateTime_AnotherSuffix>'
+        ).setType(SpecialBookDateTime_AnotherSuffix.class).setReservedWordSuffix('_AnotherSuffix').toObject();
+
+        System.assertEquals(Date.newInstance(2019, 1, 28), specialBook.date_AnotherSuffix);
+        System.assertEquals(Time.newInstance(11, 0, 9, 0), specialBook.time_AnotherSuffix);
+    }
+
+    @IsTest
     private static void deserializeSObject()
     {
         Contact contact = new Contact(
@@ -790,5 +812,15 @@ private class XMLTest {
         {
             this.author = author;
         }
+    }
+
+    class SpecialBookDateTime_x {
+        public Date date_x;
+        public Time time_x;
+    }
+
+    class SpecialBookDateTime_AnotherSuffix {
+        public Date date_AnotherSuffix;
+        public Time time_AnotherSuffix;
     }
 }

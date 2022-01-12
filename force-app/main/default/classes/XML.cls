@@ -29,6 +29,7 @@ public class XML {
 
     private static final String DEFAULT_ROOT_TAG = 'elements';
     private static final String DEFAULT_ELEMENT_TAG = 'element';
+    private static final List<String> RESERVED_WORDS = new List<String>{'abstract', 'activate', 'and', 'any', 'array', 'as', 'asc', 'autonomous', 'begin', 'bigdecimal', 'blob', 'boolean', 'break', 'bulk', 'by', 'byte', 'case', 'cast', 'catch', 'char', 'class', 'collect', 'commit', 'const', 'continue', 'currency', 'date', 'datetime', 'decimal', 'default', 'delete', 'desc', 'do', 'double', 'else', 'end', 'enum', 'exception', 'exit', 'export', 'extends', 'false', 'final', 'finally', 'float', 'for', 'from', 'global', 'goto', 'group', 'having', 'hint', 'if', 'implements', 'import', 'in', 'inner', 'insert', 'instanceof', 'int', 'integer', 'interface', 'into', 'join', 'like', 'limit', 'list', 'long', 'loop', 'map', 'merge', 'new', 'not', 'null', 'nulls', 'number', 'object', 'of', 'on', 'or', 'outer', 'override', 'package', 'parallel', 'pragma', 'private', 'protected', 'public', 'retrieve', 'return', 'rollback', 'select', 'set', 'short', 'sObject', 'sort', 'static', 'string', 'super', 'switch', 'synchronized', 'system', 'testmethod', 'then', 'this', 'throw', 'time', 'transaction', 'trigger', 'true', 'try', 'undelete', 'update', 'upsert', 'using', 'virtual', 'void', 'webservice', 'when', 'where', 'while'};
 
     /**
      * Initialises the writer class and exposes the methods provided
@@ -502,12 +503,13 @@ public class XML {
      */
     public class Reader {
 
-        private String xmlString;
+        private String xmlString { get { return new Utils().replaceXMLReservedWords(xmlString, reservedWordSuffix); } set; }
         private Type apexType;
         private String apexTypeName;
         private Set<String> arrayNodes = new Set<String>();
         private Boolean showNamespaces = true;
         private String filterNamespace;
+        private String reservedWordSuffix = '_x';
 
         /**
          * Pass the xml string for deserialization.
@@ -518,6 +520,7 @@ public class XML {
          */
         public Reader read(String xmlString)
         {
+            // Remove white space in blank tags to correctly set them as nulls.
             this.xmlString = xmlString != null ? xmlString.replaceAll('>\\s+<', '><') : null;
             return this;
         }
@@ -608,6 +611,21 @@ public class XML {
             System.debug(toString());
             return this;
         }
+
+        /**
+         * When one of the tags contains a reserved word, this tag will be renamed and a suffix
+         * added so that it can be correctly managed.
+         *
+         * @param reservedWordSuffix
+         *
+         * @return
+         */
+        public Reader setReservedWordSuffix(String reservedWordSuffix)
+        {
+            this.reservedWordSuffix = reservedWordSuffix;
+            return this;
+        }
+
 
         /**
          * Set the type of object the xml string will be converted to.
@@ -846,6 +864,42 @@ public class XML {
                 keySetCaseMap.put(key.toLowerCase(), key);
             }
             return keySetCaseMap;
+        }
+
+        /**
+         * Returns a new XML string that replaces reserved words with a suffix.
+         * This can be in the form:
+         * - {Reservedword}
+         * - {reservedword}
+         *
+         * @param str
+         * @param suffix
+         *
+         * @return
+         */
+        public String replaceXMLReservedWords(String str, String suffix) {
+            if ( str == null || suffix == null ) {
+                return str;
+            }
+
+            String reservedWordsRegex = String.join(RESERVED_WORDS, '|');
+            String reservedUCWordsRegex = String.join(toUCWords(String.join(RESERVED_WORDS, ' ')).split(' '), '|');
+            return str.replaceAll('<(/?(' + reservedWordsRegex + '|' + reservedUCWordsRegex + '))>', '<$1' + suffix + '>');
+        }
+
+        /**
+         * Capitalizes the first letter of each word.
+         *
+         * @param str
+         *
+         * @return
+         */
+        public String toUCWords(String str) {
+            List<String> strWordArray = new List<String>();
+            for ( String strWord : str.split(' ') ) {
+                strWordArray.add(strWord.substring(0, 1).toUpperCase() + strWord.substring(1, strWord.length()));
+            }
+            return String.join(strWordArray, ' ');
         }
     }
 

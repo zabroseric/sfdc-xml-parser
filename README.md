@@ -22,7 +22,8 @@ When working with Apex there can be limitations, one of which is using XML when 
 * Tag and Value Sanitization
 * Clark Notations
 * Deserialization Interfaces
-* Namespace Filtering 
+* Namespace Filtering
+* Reserved Word Management
 
 ## Usage - Serialization
 The methods below show examples of common cases when parsing xml, and how you may go around this. Check out the [Other Cool Stuff](#other-cool-stuff) area for details on various pieces of functionality that can be used to alter the xml characteristics.
@@ -337,6 +338,30 @@ XML.deserialize(
 Debug
 ```text
 {element={{http://example.org}localname2=val2}}
+```
+
+### Reserved Word Management
+When the XML data contains reserved words, by default the suffix of **_x** is added. However, if you would like to add your own custom suffix, you can do so via the following:
+
+```java
+class CompleteDate {
+    public Date date_xyz;
+    public Time time_xyz;
+}
+
+CompleteDate completeDate = (CompleteDate) XML.deserialize(
+    '<CompleteDate>' +
+    '   <Date>2019-01-28</Date>' +
+    '   <Time>11:00:09Z</Time>' +
+    '</CompleteDate>' 
+).setType(CompleteDate.class).setReservedWordSuffix('_xyz').toObject();
+
+System.debug(completeDate);
+``` 
+
+Debug
+```text
+CompleteDate:[date_xyz=2019-01-28 00:00:00, time_xyz=11:00:09.000Z]
 ```
 
 ## Limitations
