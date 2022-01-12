@@ -125,8 +125,10 @@ public class XML {
 
             // Flatten the elements if possible, so Elements / Element => Element
             if ( document.getRootElement().getChildElements().size() == 1 && rootTag == DEFAULT_ROOT_TAG ) {
-                xmlString = xmlString.left(xmlString.length() - 3 - rootTag.length())
-                    .replace('<' + elementTag + '>', '').replace('<' + rootTag, '<' + elementTag);
+                xmlString = xmlString
+                    .replaceAll('<(/?)(' + rootTag + '|' + elementTag + ')([^>]*)>' +
+                        '\\s*(<(/?)(' + rootTag + '|' + elementTag + ')([^>]*)>)?',
+                    '<$1' + elementTag + '$3>');
             }
 
             // If there are attributes in the closing tags, remove them.
