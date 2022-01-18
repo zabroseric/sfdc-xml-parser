@@ -88,10 +88,11 @@ public class XML {
         private String rootTag = DEFAULT_ROOT_TAG;
         private String elementTag = DEFAULT_ELEMENT_TAG;
         private Boolean showEncoding = false;
-        private Map<String, String> attributes = new Map<String, String>();
+        private Map<String, String> rootAttributes = new Map<String, String>();
         private Map<String, String> namespaces = new Map<String, String>();
         private Boolean detectRootTag = true;
         private Boolean beautify = false;
+        private Boolean embedAttributes = false;
 
         private ObjectWrapper obj;
 
@@ -131,7 +132,7 @@ public class XML {
                     '<$1' + elementTag + '$3>');
             }
 
-            // If there are attributes in the closing tags, remove them.
+            // If there are rootAttributes in the closing tags, remove them.
             xmlString = xmlString.replaceAll('</([^> ]+) [^>]+="[^>]+">', '</$1>');
 
             return beautify ? formatString(xmlString) : xmlString;
@@ -232,23 +233,22 @@ public class XML {
          *
          * @return
          */
-        public Writer setAttribute(String key, String value)
+        public Writer addRootAttribute(String key, String value)
         {
-            this.attributes.put(key, value);
+            this.rootAttributes.put(key, value);
             return this;
         }
 
         /**
          * Sets attributes on the root node.
          *
-         * @param key
-         * @param value
+         * @param rootAttributes
          *
          * @return
          */
-        public Writer setAttributes(Map<String, String> attributes)
+        public Writer setRootAttributes(Map<String, String> rootAttributes)
         {
-            this.attributes = attributes;
+            this.rootAttributes = rootAttributes;
             return this;
         }
 
@@ -263,7 +263,7 @@ public class XML {
         public Writer setNamespace(String uri, String prefix)
         {
             this.namespaces.put(uri, prefix);
-            this.attributes.put('xmlns:' + prefix, uri);
+            this.rootAttributes.put('xmlns:' + prefix, uri);
             return this;
         }
 
@@ -298,6 +298,24 @@ public class XML {
         }
 
         /**
+         * Sets any attributes tags to be serialized into the tag.
+         */
+        public Writer embedAttributes()
+        {
+            this.embedAttributes = true;
+            return this;
+        }
+
+        /**
+         * Sets any attributes tags to be serialized into a separate child tag.
+         */
+        public Writer splitAttributes()
+        {
+            this.embedAttributes = true;
+            return this;
+        }
+
+        /**
          * Formats the xml string.
          *
          * @param xmlString
@@ -317,7 +335,7 @@ public class XML {
                     indents--;
                 }
 
-                for ( Integer i = 0; i < indents; i++ ) { xmlStringFormatted += '   '; }
+                for ( Integer i = 0; i < indents; i++ ) { xmlStringFormatted += '  '; }
                 xmlStringFormatted += '<' + split + '>\r\n';
 
                 if ( !split.contains('>') && !split.contains('<?xml') && split.left(1) != '/' && split.right(1) != '/' ) {
@@ -355,9 +373,19 @@ public class XML {
             Dom.Document document = new Dom.Document();
             Dom.XmlNode xmlNode = document.createRootElement(rootTag, null, null);
 
+            // If we have chosen to embed attributes, add them to the current node.
+            if ( embedAttributes && obj.hasAttributes() )  {
+                for ( String attrKey : obj.getAttributes().keySet() ) {
+                    xmlNode.setAttribute(
+                      attrKey,
+                      obj.getAttributes().get(attrKey) != null ? String.valueOf(obj.getAttributes().get(attrKey)) : 'null'
+                    );
+                }
+            }
+
             // Set the attributes on the root node.
-            for ( String key : attributes.keySet() ) {
-                document.getRootElement().setAttribute(key, attributes.get(key));
+            for ( String key : this.rootAttributes.keySet() ) {
+                document.getRootElement().setAttribute(key, this.rootAttributes.get(key));
             }
 
             // Detect the type of root object we have and parse it.
@@ -432,11 +460,17 @@ public class XML {
                 key = key.left(1).isNumeric() ? '_' + key : key;
 
                 ObjectWrapper obj = new ObjectWrapper(values.get(i));
+                Dom.XmlNode childNode;
+
+                // If we have chosen to embed attributes, add them to the tag.
+                if ( embedAttributes && key == 'attributes' ) {
+                    continue;
+                }
 
                 // If we have an empty list and have chosen not to suppress
                 // nulls, ensure this is added to the xml.
                 if ( obj.instanceOfList() && obj.isEmpty() && !suppressNulls ) {
-                    xmlNode.addChildElement(key, null, null);
+                    childNode = xmlNode.addChildElement(key, null, null);
                 }
 
                 // Convert the lists / maps, iterate over these and determine if the
@@ -445,15 +479,13 @@ public class XML {
                     notEmptyNumber += parseList(obj.toList(), key, xmlNode) ? 0 : 1;
                 }
                 else if ( obj.instanceOfMap() ) {
-                    notEmptyNumber += parseMap(
-                        obj.toMap(),
-                        xmlNode.addChildElement(key, null, null)
-                    ) ? 0 : 1;
+                    childNode = xmlNode.addChildElement(key, null, null);
+                    notEmptyNumber += parseMap(obj.toMap(), childNode) ? 0 : 1;
                 }
 
                 // If we have a value don't iterate and just add the node.
                 else if ( !obj.isEmpty() ) {
-                    xmlNode
+                    childNode = xmlNode
                         .addChildElement(key, null, null)
                         .addTextNode(obj.toString());
                     notEmptyNumber += 1;
@@ -461,8 +493,15 @@ public class XML {
 
                 // If we have chosen not to suppress nulls, ensure an empty tag is there.
                 else if ( !suppressNulls ) {
-                    xmlNode.addChildElement(key, null, null);
+                    childNode = xmlNode.addChildElement(key, null, null);
                     notEmptyNumber += 1;
+                }
+
+                // If we have chosen to embed attributes, add them to the node we have just added.
+                if ( embedAttributes && obj.hasAttributes() && childNode != null )  {
+                    for ( String attrKey : obj.getAttributes().keySet() ) {
+                        childNode.setAttribute(attrKey, String.valueOf(obj.getAttributes().get(attrKey)));
+                    }
                 }
             }
 
@@ -560,6 +599,7 @@ public class XML {
             catch (Exception e) {
                 throw new XmlException('The XML string is invalid, value: ' + xmlString);
             }
+            System.debug(objectMap);
 
             // If we haven't passed a type, return the map we have.
             if ( apexType == null ) {
@@ -746,13 +786,31 @@ public class XML {
             Boolean hasNext = reader.hasNext();
             if ( hasNext ) { reader.next(); }
 
-            while( hasNext ) {
+            while ( hasNext ) {
                 // Add the clark notation to the tag name if we have a namespace.
                 tagName = ( showNamespaces && reader.getNamespace() != null ? '{' + reader.getNamespace() + '}' : '') + reader.getLocalName();
 
                 // If we have a start element add this.
                 if ( reader.getEventType() == XmlTag.START_ELEMENT ) {
+                    // Add the attributes as a separate tag to support deserialization.
+                    Map<String, Object> attributeMap = new Map<String, Object>();
+                    if ( reader.getAttributeCount() > 0 ) {
+                        for ( Integer i = 0; i < reader.getAttributeCount(); i++ ) {
+                            attributeMap.put(reader.getAttributeLocalName(i), reader.getAttributeValueAt(i));
+                        }
+                    }
+
                     objectCurrent = parseNested(reader, tagName);
+
+                    // If we have a map as our current tag, add the attributes tag / merge the values.
+                    if ( objectCurrent instanceof Map<String, Object> && !attributeMap.isEmpty() ) {
+                        Map<String, Object> objectCurrentMap = ((Map<String, Object>) objectCurrent);
+                        if ( objectCurrentMap.containsKey('attributes') ) {
+                            ((Map<String, Object>) objectCurrentMap.get('attributes')).putAll(attributeMap);
+                        } else {
+                            objectCurrentMap.put('attributes', attributeMap);
+                        }
+                    }
 
                     // If we haven't come across this node, and we should make it array, create one.
                     if ( !objectMap.containsKey(tagName) && arrayNodes.contains(tagName) ) {
@@ -762,7 +820,7 @@ public class XML {
                     else if ( !objectMap.containsKey(tagName) ) {
                         objectMap.put(tagName, objectCurrent);
                     }
-                    // if we have this node, and it's a list add to it.
+                    // If we have this node, and it's a list add to it.
                     else if ( objectMap.get(tagName) instanceof List<Object> ) {
                         ((List<Object>) objectMap.get(tagName)).add(objectCurrent);
                     }
@@ -779,6 +837,7 @@ public class XML {
                     if ( filterNamespace != null && tagName.contains('{') && !tagName.contains(filterNamespace) ) {
                         objectMap.remove(tagName);
                     }
+
                 }
 
                 // We we are ending our starting tag break this loop.
@@ -925,6 +984,40 @@ public class XML {
         public ObjectWrapper(Object obj)
         {
             this.obj = obj;
+        }
+
+        /**
+         * Returns true if the current object has list of attributes that are in the form
+         * attributes =>
+         *  key => value
+         *  key => value
+         *
+         * @return
+         */
+        public Boolean hasAttributes()
+        {
+            return !getAttributes().isEmpty();
+        }
+
+        /**
+         * Returns a map if the current object has list of attributes that are in the form
+         * attributes =>
+         *  key => value
+         *  key => value
+         *
+         * @return
+         */
+        public Map<String, Object> getAttributes()
+        {
+            if ( !instanceOfMap() ) {
+                return new Map<String, Object>();
+            }
+
+            Map<String, Object> objMap = (Map<String, Object>) obj;
+            if (objMap.containsKey('attributes') && new ObjectWrapper(objMap.get('attributes')).instanceOfMap()) {
+                return (Map<String, Object>) objMap.get('attributes');
+            }
+            return new Map<String, Object>();
         }
 
         /**

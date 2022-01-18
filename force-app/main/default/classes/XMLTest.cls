@@ -127,6 +127,40 @@ private class XMLTest {
     }
 
     @IsTest
+    private static void serializeSObjectAttributesEmbedded()
+    {
+        Contact contact = new Contact(
+            FirstName = 'First',
+            LastName = 'Last'
+        );
+
+        String xmlString = XML.serialize(contact).embedAttributes().toString();
+        System.assertEquals('<Contact type="Contact"><FirstName>First</FirstName><LastName>Last</LastName></Contact>', xmlString);
+    }
+
+    @IsTest
+    private static void serializeSObjectsAttributesEmbedded()
+    {
+        List<Contact> contacts = new List<Contact>{
+          new Contact(
+            FirstName = 'First1',
+            LastName = 'Last1'
+          ),
+          new Contact(
+            FirstName = 'First2',
+            LastName = 'Last2'
+          )
+        };
+
+        insert contacts;
+        Id contactId1 = contacts.get(0).Id;
+        Id contactId2 = contacts.get(1).Id;
+
+        String xmlString = XML.serialize(contacts).embedAttributes().toString();
+        System.assertEquals('<Contacts><Contact type="Contact" url="/services/data//sobjects/Contact/' + contactId1 + '"><FirstName>First1</FirstName><LastName>Last1</LastName><Id>' + contactId1 + '</Id></Contact><Contact type="Contact" url="/services/data//sobjects/Contact/' + contactId2 + '"><FirstName>First2</FirstName><LastName>Last2</LastName><Id>' + contactId2 + '</Id></Contact></Contacts>', xmlString.replaceAll('v[0-9]{2}\\.[0-9]', ''));
+    }
+
+    @IsTest
     private static void serializeEmptyContactList()
     {
         String xmlString = XML.serialize(new List<Contact>()).toString();
@@ -285,14 +319,14 @@ private class XMLTest {
     @IsTest
     private static void serializeSetXMLHeaderAttributes()
     {
-        String xmlString = XML.serialize(new List<String>()).setAttribute('Attr', 'No Attributes').toString();
+        String xmlString = XML.serialize(new List<String>()).addRootAttribute('Attr', 'No Attributes').toString();
         System.assertEquals('<elements Attr="No Attributes"></elements>', xmlString);
     }
 
     @IsTest
     private static void serializeSetXMLHeaderAttributesSuppressNulls()
     {
-        String xmlString = XML.serialize(new List<String>()).setAttributes(new Map<String, String>{'Attr' => 'No Attributes'}).suppressNulls().toString();
+        String xmlString = XML.serialize(new List<String>()).setRootAttributes(new Map<String, String>{'Attr' => 'No Attributes'}).suppressNulls().toString();
         System.assertEquals('<elements Attr="No Attributes" />', xmlString);
     }
 
@@ -315,6 +349,25 @@ private class XMLTest {
     {
         String xmlString = XML.serialize(new List<String>{'a'}).showEncoding().toString();
         System.assertEquals('<?xml version="1.0" encoding="UTF-8"?><element>a</element>', xmlString);
+    }
+
+    @IsTest
+    private static void serializeMapElementsTag()
+    {
+        String xmlString = XML.serialize(new Map<String, String>{
+            'key1' => 'val1',
+            'key2' => 'val2'
+        }).toString();
+        System.assertEquals('<elements><key2>val2</key2><key1>val1</key1></elements>', xmlString);
+    }
+
+    @IsTest
+    private static void serializeMapElementTag()
+    {
+        String xmlString = XML.serialize(new Map<String, String>{
+            'key1' => 'val1'
+        }).toString();
+        System.assertEquals('<element><key1>val1</key1></element>', xmlString);
     }
 
     @IsTest
@@ -421,7 +474,7 @@ private class XMLTest {
             'a',
             'b'
         }).beautify().toString();
-        System.assertEquals('<elements>\r\n   <element>a</element>\r\n   <element>b</element>\r\n</elements>', xmlString);
+        System.assertEquals('<elements>\r\n  <element>a</element>\r\n  <element>b</element>\r\n</elements>', xmlString);
     }
 
     @IsTest
@@ -443,7 +496,7 @@ private class XMLTest {
                 'c' => 'd'
             }
         }).beautify().toString();
-        System.assertEquals('<element>\r\n   <c>d</c>\r\n   <a>b</a>\r\n</element>', xmlString);
+        System.assertEquals('<element>\r\n  <c>d</c>\r\n  <a>b</a>\r\n</element>', xmlString);
     }
 
     @IsTest
@@ -490,7 +543,7 @@ private class XMLTest {
                 'c' => 'd'
             }
         }).showEncoding().beautify().toString();
-        System.assertEquals('<?xml version="1.0" encoding="UTF-8"?>\r\n<element>\r\n   <c>d</c>\r\n   <a>b</a>\r\n</element>', xmlString);
+        System.assertEquals('<?xml version="1.0" encoding="UTF-8"?>\r\n<element>\r\n  <c>d</c>\r\n  <a>b</a>\r\n</element>', xmlString);
     }
 
     @IsTest
@@ -748,6 +801,113 @@ private class XMLTest {
         }
     }
 
+    @IsTest
+    public static void serializeObjectNoAttributes()
+    {
+        Library library = new Library(
+          new Catalog(
+            new Books(
+              new List<Book>{
+                new Book('title1', new Authors(new List<String>{'Name1', 'Name2'}), '23.00'),
+                new Book('title2', new Authors(new List<String>{'Name3'}), '23.00'),
+                new Book('title5', new Authors(new List<String>{}), null)
+              }
+            )
+          )
+        );
+
+        String xmlString = XML.serialize(library).setRootTag('library').embedAttributes().toString();
+        System.assertEquals('<library><catalog><books><book><title>title1</title><price>23.00</price><authors><author>Name1</author><author>Name2</author></authors></book><book><title>title2</title><price>23.00</price><authors><author>Name3</author></authors></book><book><title>title5</title><price /><authors><author /></authors></book></books></catalog></library>', xmlString);
+    }
+
+    @IsTest
+    public static void serializeObjectAttributes()
+    {
+        BookWithStringAttributes book = new BookWithStringAttributes();
+        book.attributes.put('key1', 'value1');
+        book.attributes.put('key2', 'value2');
+        book.title = 'title';
+
+        String xmlString = XML.serialize(book).setRootTag('book').embedAttributes().toString();
+        System.assertEquals('<book key2="value2" key1="value1"><title>title</title></book>', xmlString);
+    }
+
+    @IsTest
+    public static void serializeObjectAttributeNumbers()
+    {
+        BookWithIntegerAttributes book = new BookWithIntegerAttributes();
+        book.attributes.put('key1', 12);
+        book.attributes.put('key2', 23);
+        book.title = 'title';
+
+        String xmlString = XML.serialize(book).setRootTag('book').embedAttributes().toString();
+        System.assertEquals('<book key2="23" key1="12"><title>title</title></book>', xmlString);
+    }
+
+    @IsTest
+    public static void serializeObjectAttributeEmpty()
+    {
+        BookWithStringAttributes book = new BookWithStringAttributes();
+        book.attributes.put('key1', null);
+        book.title = 'title';
+
+        String xmlString = XML.serialize(book).setRootTag('book').embedAttributes().toString();
+        System.assertEquals('<book key1="null"><title>title</title></book>', xmlString);
+    }
+
+    @IsTest
+    public static void serializeObjectAttributesWithRoot()
+    {
+        BookWithStringAttributes book = new BookWithStringAttributes();
+        book.attributes.put('key1', 'value1');
+        book.title = 'title';
+
+        String xmlString = XML.serialize(book).setRootTag('book').addRootAttribute('key2', 'value2').embedAttributes().toString();
+        System.assertEquals('<book key1="value1" key2="value2"><title>title</title></book>', xmlString);
+    }
+
+    @IsTest
+    public static void serializeObjectAttributesWithRootOverride()
+    {
+        BookWithStringAttributes book = new BookWithStringAttributes();
+        book.attributes.put('key1', 'value1');
+        book.title = 'title';
+
+        String xmlString = XML.serialize(book).setRootTag('book').addRootAttribute('key1', 'value2').embedAttributes().toString();
+        System.assertEquals('<book key1="value2"><title>title</title></book>', xmlString);
+    }
+
+    @IsTest
+    public static void deserializeObjectAttributesNotEmbedded()
+    {
+        BookWithStringAttributes book = (BookWithStringAttributes) XML.deserialize('<BookWithStringAttributes key1="value1"><title>title</title></BookWithStringAttributes>').setType(BookWithStringAttributes.class).toObject();
+
+        System.assertNotEquals(null, book.attributes);
+        System.assertEquals('value1', book.attributes.get('key1'));
+        System.assertEquals('title', book.title);
+    }
+
+    @IsTest
+    public static void deserializeObjectAttributesEmbedded()
+    {
+        BookWithStringAttributes book = (BookWithStringAttributes) XML.deserialize('<BookWithStringAttributes><attributes><key1>value1</key1></attributes><title>title</title></BookWithStringAttributes>').setType(BookWithStringAttributes.class).toObject();
+
+        System.assertNotEquals(null, book.attributes);
+        System.assertEquals('value1', book.attributes.get('key1'));
+        System.assertEquals('title', book.title);
+    }
+
+    @IsTest
+    public static void deserializeObjectAttributesCombination()
+    {
+        BookWithStringAttributes book = (BookWithStringAttributes) XML.deserialize('<BookWithStringAttributes key1="value1"><attributes><key2>value2</key2></attributes><title>title</title></BookWithStringAttributes>').setType(BookWithStringAttributes.class).toObject();
+
+        System.assertNotEquals(null, book.attributes);
+        System.assertEquals('value1', book.attributes.get('key1'));
+        System.assertEquals('value2', book.attributes.get('key2'));
+        System.assertEquals('title', book.title);
+    }
+
     private class Library {
         public Catalog catalog;
 
@@ -822,5 +982,15 @@ private class XMLTest {
     class SpecialBookDateTime_AnotherSuffix {
         public Date date_AnotherSuffix;
         public Time time_AnotherSuffix;
+    }
+
+    class BookWithStringAttributes {
+        public Map<String, String> attributes = new Map<String, String>();
+        public String title;
+    }
+
+    class BookWithIntegerAttributes {
+        public Map<String, Integer> attributes = new Map<String, Integer>();
+        public String title;
     }
 }
