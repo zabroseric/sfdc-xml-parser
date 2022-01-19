@@ -18,18 +18,18 @@ Built Status:
 - [Features](#features)
 - [Overview](#overview)
 - [Getting Started](#getting-started)
-- [Usage - Serialization](#usage-serialization)
+- [Usage - Serialization](#usage---serialization)
   - [SObject](#sobject)
   - [SObject List](#sobject-list)
   - [Objects](#objects)
   - [Maps](#maps)
-- [Usage - Deserialization](#usage-deserialization)
+- [Usage - Deserialization](#usage---deserialization)
   - [SObject](#sobject-1)
   - [SObject List](#sobject-list-1)
   - [Objects](#objects-1)
   - [Maps](#maps-1)
-- [References - Serialization](#references-serialization)
-- [References - Deserialization](#references-deserialization)
+- [References - Serialization](#references---serialization)
+- [References - Deserialization](#references---deserialization)
 - [Other Cool Things](#other-cool-things)
 - [Limitations](#limitations)
 - [Contributing](#contributing)
@@ -259,6 +259,25 @@ Map<String, Object> objectMap = (Map<String, Object>) XML.deserialize('<elements
 ```
 
 ## References - Serialization
+
+### Summary
+
+- [toString](#tostring)
+- [toBase64](#tobase64)
+- [debug](#debug)
+- [showNulls](#shownulls-default--suppressnulls)
+- [suppressNulls](#shownulls-default--suppressnulls)
+- [minify](#minify-default--beautify)
+- [beautify](#minify-default--beautify)
+- [hideEncoding](#hideencoding-default--showencoding)
+- [showEncoding](#hideencoding-default--showencoding)
+- [addRootAttribute](#addrootattribute--setrootattributes)
+- [setRootAttributes](#addrootattribute--setrootattributes)
+- [addNamespace](#addnamespace--setnamespaces)
+- [setNamespaces](#addnamespace--setnamespaces)
+- [setRootTag](#setroottag)
+- [splitAttributes](#splitattributes-default--embedattributes)
+- [embedAttributes](#splitattributes-default--embedattributes)
 
 ### toString
 
@@ -553,6 +572,19 @@ String xmlString = XML.serialize(contact).embedAttributes().beautify().toString(
 Further to this, any fields with the called **attributes** with a type of Map<String, Object> will be automatically embedded as attributes in the current tag.
 
 ## References - Deserialization
+
+### Summary
+
+- [toObject](#toobject)
+- [setType](#settype)
+- [toString](#tostring-1)
+- [debug](#debug-1)
+- [setReservedWordSuffix](#setreservedwordsuffix)
+- [filterNamespace](#filternamespace)
+- [showNamespaces](#shownamespaces-default--hidenamespaces)
+- [hideNamespaces](#shownamespaces-default--hidenamespaces)
+- [addArrayNode](#addarraynode--setarraynodes)
+- [setArrayNodes](#addarraynode--setarraynodes)
 
 ### toObject
 
