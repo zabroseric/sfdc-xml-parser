@@ -13,6 +13,19 @@ Built Status:
 | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | [![Deploy](https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/deploy.png)](https://githubsfdeploy.herokuapp.com/?owner=zabroseric&repo=sfdc-xml-parser&ref=master) |
 
+## Table of Contents
+
+- [Features](#features)
+- [Overview](#overview)
+- [Getting Started](#getting-started)
+- [Usage - Serialization](#usage-serialization)
+- [Usage - Deserialization](#usage-deserialization)
+- [References - Serialization](#references-serialization)
+- [References - Deserialization](#references-deserialization)
+- [Other Cool Things](#other-cool-things)
+- [Limitations](#limitations)
+- [Contributing](#contributing)
+
 ## Features
 
 * Serialize / Deserialize SObjects
@@ -237,7 +250,7 @@ Map<String, Object> objectMap = (Map<String, Object>) XML.deserialize('<elements
     .setArrayNode('elements').toObject();
 ```
 
-## <a name="references-serialization"></a> References - Serialization
+## References - Serialization
 
 ### toString
 
@@ -531,7 +544,7 @@ String xmlString = XML.serialize(contact).embedAttributes().beautify().toString(
 
 Further to this, any fields with the called **attributes** with a type of Map<String, Object> will be automatically embedded as attributes in the current tag.
 
-## <a name="references-deserialization"></a> References - Deserialization
+## References - Deserialization
 
 ### toObject
 
@@ -676,7 +689,7 @@ Library library = (Library) XML.deserialize(
      .setArrayNodes(new Set<String>{'book'}).toObject();
 ```
 
-## <a name="other-cool-things"></a> Other Cool Things
+## Other Cool Things
 
 ### Deserialization Interfaces
 
