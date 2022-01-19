@@ -53,6 +53,28 @@ private class XMLTest {
     }
 
     @IsTest
+    private static void serializeSObjectRootTag()
+    {
+        Contact contact = new Contact(
+          FirstName = 'First',
+          LastName = 'Last'
+        );
+        String xmlString = XML.serialize(contact).setRootTag('NewTag').toString();
+        System.assertEquals('<NewTag><attributes><type>Contact</type></attributes><FirstName>First</FirstName><LastName>Last</LastName></NewTag>', xmlString);
+    }
+
+    @IsTest
+    private static void serializeSObjectRootAttributes()
+    {
+        Contact contact = new Contact(
+          FirstName = 'First',
+          LastName = 'Last'
+        );
+        String xmlString = XML.serialize(contact).addRootAttribute('key1', 'value1').addRootAttribute('key2', 'value2').toString();
+        System.assertEquals('<Contact><attributes><type>Contact</type><key1>value1</key1><key2>value2</key2></attributes><FirstName>First</FirstName><LastName>Last</LastName></Contact>', xmlString);
+    }
+
+    @IsTest
     private static void serializeSObjects()
     {
         List<Contact> contacts = new List<Contact>{
@@ -68,6 +90,42 @@ private class XMLTest {
 
         String xmlString = XML.serialize(contacts).toString();
         System.assertEquals('<Contacts><Contact><attributes><type>Contact</type></attributes><FirstName>First1</FirstName><LastName>Last1</LastName></Contact><Contact><attributes><type>Contact</type></attributes><FirstName>First2</FirstName><LastName>Last2</LastName></Contact></Contacts>', xmlString);
+    }
+
+    @IsTest
+    private static void serializeSObjectsRootTag()
+    {
+        List<Contact> contacts = new List<Contact>{
+            new Contact(
+                FirstName = 'First1',
+                LastName = 'Last1'
+            ),
+            new Contact(
+                FirstName = 'First2',
+                LastName = 'Last2'
+            )
+        };
+
+        String xmlString = XML.serialize(contacts).setRootTag('NewTag').toString();
+        System.assertEquals('<NewTag><element><attributes><type>Contact</type></attributes><FirstName>First1</FirstName><LastName>Last1</LastName></element><element><attributes><type>Contact</type></attributes><FirstName>First2</FirstName><LastName>Last2</LastName></element></NewTag>', xmlString);
+    }
+
+    @IsTest
+    private static void serializeSObjectsRootAttributes()
+    {
+        List<Contact> contacts = new List<Contact>{
+            new Contact(
+                FirstName = 'First1',
+                LastName = 'Last1'
+            ),
+            new Contact(
+                FirstName = 'First2',
+                LastName = 'Last2'
+            )
+        };
+
+        String xmlString = XML.serialize(contacts).setRootTag('NewTag').toString();
+        System.assertEquals('<Contacts><Contact><attributes><type>Contact</type></attributes><FirstName>First1</FirstName><LastName>Last1</LastName></Contact><Contact><attributes><type>Contact</type></attributes><FirstName>First2</FirstName><LastName>Last2</LastName></Contact><attributes><key1>value1</key1><key2>value2</key2></attributes></Contacts>', xmlString);
     }
 
     @IsTest
@@ -401,14 +459,14 @@ private class XMLTest {
     @IsTest
     private static void deserializeEmptyListArrayNode()
     {
-        Object obj = XML.deserialize('<elements></elements>').setArrayNode('elements').toObject();
+        Object obj = XML.deserialize('<elements></elements>').addArrayNode('elements').toObject();
         System.assertEquals(new Map<String, Object>{'elements' => new List<String>{null}}, obj);
     }
 
     @IsTest
     private static void deserializeEmptyListArrayNodeChild()
     {
-        Object obj = XML.deserialize('<elements><element></element></elements>').setArrayNode('element').toObject();
+        Object obj = XML.deserialize('<elements><element></element></elements>').addArrayNode('element').toObject();
         System.assertEquals(new Map<String, Object>{'elements' => new Map<String, Object>{'element' => new List<String>{null}}}, obj);
     }
 
@@ -507,7 +565,7 @@ private class XMLTest {
                 '{http://example.org}a' => 'b',
                 '{http://example.org}c' => 'd'
             }
-        }).setNamespace('http://example.org', 'b').toString();
+        }).addNamespace('http://example.org', 'b').toString();
         System.assertEquals('<element xmlns:b="http://example.org"><b:c>d</b:c><b:a>b</b:a></element>', xmlString);
     }
 
@@ -718,7 +776,7 @@ private class XMLTest {
         String xmlString = XML.serialize(libraryObject).setRootTag('Library').toString();
         System.assertEquals(String.valueOf(libraryObject),
             String.valueOf(XML.deserialize(xmlString, Library.class)
-            .setArrayNode('author').toObject())
+            .addArrayNode('author').toObject())
         );
     }
 

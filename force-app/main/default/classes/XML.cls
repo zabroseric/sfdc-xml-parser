@@ -260,7 +260,7 @@ public class XML {
          *
          * @return
          */
-        public Writer setNamespace(String uri, String prefix)
+        public Writer addNamespace(String uri, String prefix)
         {
             this.namespaces.put(uri, prefix);
             this.rootAttributes.put('xmlns:' + prefix, uri);
@@ -277,7 +277,7 @@ public class XML {
         public Writer setNamespaces(Map<String, String> namespaces)
         {
             for ( String uri : namespaces.keySet() ) {
-                setNamespace(uri, namespaces.get(uri));
+                addNamespace(uri, namespaces.get(uri));
             }
             return this;
         }
@@ -361,7 +361,10 @@ public class XML {
         {
             // Detects and sets both the root and element tags based on any SObjects that can be found from
             // the object provided.
-            if ( obj.instanceOfSObjectMap() || obj.instanceOfSObjectList() ) {
+            if ( !detectRootTag ) {
+                // Do nothing.
+            }
+            else if ( obj.instanceOfSObjectMap() || obj.instanceOfSObjectList() ) {
                 rootTag = obj.getSObjectDescribe().labelPlural;
                 elementTag = obj.getSObjectDescribe().label;
             }
@@ -383,11 +386,6 @@ public class XML {
                 }
             }
 
-            // Set the attributes on the root node.
-            for ( String key : this.rootAttributes.keySet() ) {
-                document.getRootElement().setAttribute(key, this.rootAttributes.get(key));
-            }
-
             // Detect the type of root object we have and parse it.
             if ( obj.instanceOfList() && !obj.isEmpty() ) {
                 parseList(obj.toList(), elementTag, xmlNode);
@@ -399,6 +397,23 @@ public class XML {
             // Otherwise if we have primitive type, parse this.
             else if ( !(obj.isEmpty() && suppressNulls) ) {
                 xmlNode.addTextNode(obj.toString());
+            }
+
+            // Set the attributes on the root node.
+            for ( String key : this.rootAttributes.keySet() ) {
+                String value = this.rootAttributes.get(key);
+
+                if ( embedAttributes ) {
+                    document.getRootElement().setAttribute(key, value);
+                }
+                else if ( document.getRootElement().getChildElement('attributes', null) != null ) {
+                    document.getRootElement().getChildElement('attributes', null)
+                      .addChildElement(key, null, null).addTextNode(value);
+                }
+                else {
+                    document.getRootElement().addChildElement('attributes', null, null)
+                      .addChildElement(key, null, null).addTextNode(value);
+                }
             }
 
             return document;
@@ -580,7 +595,7 @@ public class XML {
                         e.getMessage().replaceAll('.+(".+").+', '$1')
                     );
                 }
-                throw e;
+                throw new XmlException(e.getMessage());
             }
         }
 
@@ -599,7 +614,6 @@ public class XML {
             catch (Exception e) {
                 throw new XmlException('The XML string is invalid, value: ' + xmlString);
             }
-            System.debug(objectMap);
 
             // If we haven't passed a type, return the map we have.
             if ( apexType == null ) {
@@ -714,7 +728,7 @@ public class XML {
          *
          * @return
          */
-        public Reader setArrayNode(String node)
+        public Reader addArrayNode(String node)
         {
             this.arrayNodes.add(node);
             return this;
