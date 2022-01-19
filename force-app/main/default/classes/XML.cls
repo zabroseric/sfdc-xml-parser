@@ -403,7 +403,7 @@ public class XML {
             for ( String key : this.rootAttributes.keySet() ) {
                 String value = this.rootAttributes.get(key);
 
-                if ( embedAttributes ) {
+                if ( embedAttributes || key.startsWith('xmlns:') ) {
                     document.getRootElement().setAttribute(key, value);
                 }
                 else if ( document.getRootElement().getChildElement('attributes', null) != null ) {

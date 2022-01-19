@@ -124,7 +124,7 @@ private class XMLTest {
             )
         };
 
-        String xmlString = XML.serialize(contacts).setRootTag('NewTag').toString();
+        String xmlString = XML.serialize(contacts).addRootAttribute('key1', 'value1').addRootAttribute('key2', 'value2').toString();
         System.assertEquals('<Contacts><Contact><attributes><type>Contact</type></attributes><FirstName>First1</FirstName><LastName>Last1</LastName></Contact><Contact><attributes><type>Contact</type></attributes><FirstName>First2</FirstName><LastName>Last2</LastName></Contact><attributes><key1>value1</key1><key2>value2</key2></attributes></Contacts>', xmlString);
     }
 
@@ -377,14 +377,14 @@ private class XMLTest {
     @IsTest
     private static void serializeSetXMLHeaderAttributes()
     {
-        String xmlString = XML.serialize(new List<String>()).addRootAttribute('Attr', 'No Attributes').toString();
+        String xmlString = XML.serialize(new List<String>()).addRootAttribute('Attr', 'No Attributes').embedAttributes().toString();
         System.assertEquals('<elements Attr="No Attributes"></elements>', xmlString);
     }
 
     @IsTest
     private static void serializeSetXMLHeaderAttributesSuppressNulls()
     {
-        String xmlString = XML.serialize(new List<String>()).setRootAttributes(new Map<String, String>{'Attr' => 'No Attributes'}).suppressNulls().toString();
+        String xmlString = XML.serialize(new List<String>()).embedAttributes().setRootAttributes(new Map<String, String>{'Attr' => 'No Attributes'}).suppressNulls().toString();
         System.assertEquals('<elements Attr="No Attributes" />', xmlString);
     }
 
