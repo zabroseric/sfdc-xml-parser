@@ -936,6 +936,47 @@ private class XMLTest {
     }
 
     @IsTest
+    public static void serializeObjectAttributesWithRootOverrideSelf()
+    {
+        BookWithStringAttributesSelf book = new BookWithStringAttributesSelf();
+        book.attributes.put('key1', 'value1');
+        book.self = 'title';
+
+        String xmlString = XML.serialize(book).setRootTag('book').addRootAttribute('key2', 'value2').embedAttributes().toString();
+        System.assertEquals('<book key1="value1" key2="value2">title</book>', xmlString);
+    }
+
+    @IsTest
+    public static void serializeObjectdAttributesSelf()
+    {
+        BookWithStringAttributesSelf book1 = new BookWithStringAttributesSelf();
+        book1.attributes.put('key1', 'value1');
+        book1.self = 'title1';
+
+        BookWithStringAttributesSelf book2 = new BookWithStringAttributesSelf();
+        book2.attributes.put('key2', 'value2');
+        book2.self = 'title2';
+
+        String xmlString = XML.serialize(new List<BookWithStringAttributesSelf>{book1, book2}).setRootTag('books').embedAttributes().toString();
+        System.assertEquals('<books><element key1="value1">title1</element><element key2="value2">title2</element></books>', xmlString);
+    }
+
+    @IsTest
+    public static void serializeObjectAttributesSelfInvalid()
+    {
+        try {
+            BookWithStringAttributesSelfInvalid book = new BookWithStringAttributesSelfInvalid();
+            book.attributes.put('key1', 'value1');
+            book.self = 'title';
+            book.abc = 'abc123';
+            String xmlString = XML.serialize(book).setRootTag('book').toString();
+            System.assert(false, 'Exception expected to be thrown: ' + xmlString);
+        } catch (XmlException e) {
+            System.assert(e.getMessage().contains('self keyword'));
+        }
+    }
+
+    @IsTest
     public static void deserializeObjectAttributesNotEmbedded()
     {
         BookWithStringAttributes book = (BookWithStringAttributes) XML.deserialize('<BookWithStringAttributes key1="value1"><title>title</title></BookWithStringAttributes>').setType(BookWithStringAttributes.class).toObject();
@@ -1050,5 +1091,16 @@ private class XMLTest {
     class BookWithIntegerAttributes {
         public Map<String, Integer> attributes = new Map<String, Integer>();
         public String title;
+    }
+
+    class BookWithStringAttributesSelf {
+        public Map<String, String> attributes = new Map<String, String>();
+        public String self;
+    }
+
+    class BookWithStringAttributesSelfInvalid {
+        public Map<String, String> attributes = new Map<String, String>();
+        public String self;
+        public String abc;
     }
 }

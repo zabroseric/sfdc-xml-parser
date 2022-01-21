@@ -482,6 +482,13 @@ public class XML {
                     continue;
                 }
 
+                // VALIDATION:
+                // Ensure we only have one either text or a child node when using the self keyword.
+                if ( (key == 'self' && !xmlNode.getChildren().isEmpty()) || ((obj.instanceOfMap() || obj.instanceOfList()) && !String.isEmpty(xmlNode.getText())) ) {
+                    System.debug(xmlNode.getText());
+                    throw new XmlException('The object contains both the self keyword, and other child elements, please remove on of these.');
+                }
+
                 // If we have an empty list and have chosen not to suppress
                 // nulls, ensure this is added to the xml.
                 if ( obj.instanceOfList() && obj.isEmpty() && !suppressNulls ) {
@@ -497,7 +504,10 @@ public class XML {
                     childNode = xmlNode.addChildElement(key, null, null);
                     notEmptyNumber += parseMap(obj.toMap(), childNode) ? 0 : 1;
                 }
-
+                else if ( !obj.isEmpty() && key == 'self' && xmlNode.getChildren().isEmpty() ) {
+                    childNode = xmlNode.addTextNode(obj.toString());
+                    notEmptyNumber += 1;
+                }
                 // If we have a value don't iterate and just add the node.
                 else if ( !obj.isEmpty() ) {
                     childNode = xmlNode
@@ -513,7 +523,7 @@ public class XML {
                 }
 
                 // If we have chosen to embed attributes, add them to the node we have just added.
-                if ( embedAttributes && obj.hasAttributes() && childNode != null )  {
+                if ( embedAttributes && obj.hasAttributes() )  {
                     for ( String attrKey : obj.getAttributes().keySet() ) {
                         childNode.setAttribute(attrKey, String.valueOf(obj.getAttributes().get(attrKey)));
                     }

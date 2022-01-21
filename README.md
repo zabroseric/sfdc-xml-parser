@@ -755,6 +755,41 @@ public class Book implements XML.Deserializable {
 Book book = (Book) XML.deserialize('<Book><title>Title ABC</title><price>23.00</price></Book>', Book.class);
 ```
 
+### Self Keyword
+
+When needing to serialize a text node with attributes, this is possible using a class with both the attributes and self variables.
+In the example below, we are creating part of an html table. Here we call the embed attribute method and set self as an Object, however, this can be any type.
+
+```java
+class TableRow {
+  List<TableCell> td = new List<TableCell>{new TableCell(123), new TableCell('abc')};
+}
+
+class TableCell {
+  Map<String, Object> attributes = new Map<String, Object>{
+    'style' => 'padding:0;'
+  };
+  Object self; 
+  
+  public TableCell(Object value) {
+    this.self = value;
+  }
+}
+
+String xmlString = XML.serialize(new TableRow()).setRootTag('tr').embedAttributes().beautify().toString();
+System.debug(xmlString);
+
+```
+
+The result is a table row containing cells with attributes.
+
+```xml
+<tr>
+  <td style="padding:0;">123</td>
+  <td style="padding:0;">abc</td>
+</tr>
+```
+
 ### Tag Sanatization
 
 There are a lot of requirements when it comes to handling XML encoding both within the tags and elements themselves. In the example of tag names, these cannot start with a number. To prevent errors, keys starting with numbers are automatically prefixed with an underscore.
@@ -785,7 +820,7 @@ String xmlString = XML.serialize(new Map<String, String>{
 
 ```xml
 <element>
-  <key><value&</key>
+  <key>&_lt;value&_amp;</key>
 </element>
 ```
 
