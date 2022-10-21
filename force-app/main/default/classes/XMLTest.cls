@@ -215,8 +215,8 @@ private class XMLTest {
     private static void serializeSObjectRootTag()
     {
         Contact contact = new Contact(
-          FirstName = 'First',
-          LastName = 'Last'
+            FirstName = 'First',
+            LastName = 'Last'
         );
         String xmlString = XML.serialize(contact).setRootTag('NewTag').toString();
         System.assertEquals('<NewTag><attributes><type>Contact</type></attributes><FirstName>First</FirstName><LastName>Last</LastName></NewTag>', xmlString);
@@ -226,8 +226,8 @@ private class XMLTest {
     private static void serializeSObjectRootAttributes()
     {
         Contact contact = new Contact(
-          FirstName = 'First',
-          LastName = 'Last'
+            FirstName = 'First',
+            LastName = 'Last'
         );
         String xmlString = XML.serialize(contact).addRootAttribute('key1', 'value1').addRootAttribute('key2', 'value2').toString();
         System.assertEquals('<Contact><attributes><type>Contact</type><key1>value1</key1><key2>value2</key2></attributes><FirstName>First</FirstName><LastName>Last</LastName></Contact>', xmlString);
@@ -359,14 +359,14 @@ private class XMLTest {
     private static void serializeSObjectsAttributesEmbedded()
     {
         List<Contact> contacts = new List<Contact>{
-          new Contact(
-            FirstName = 'First1',
-            LastName = 'Last1'
-          ),
-          new Contact(
-            FirstName = 'First2',
-            LastName = 'Last2'
-          )
+            new Contact(
+                FirstName = 'First1',
+                LastName = 'Last1'
+            ),
+            new Contact(
+                FirstName = 'First2',
+                LastName = 'Last2'
+            )
         };
 
         insert contacts;
@@ -400,7 +400,7 @@ private class XMLTest {
     private static void deserializeReservedWordStandard()
     {
         SpecialBookDateTime_x specialBook = (SpecialBookDateTime_x) XML.deserialize(
-        '<SpecialBookDateTime_x><Date>2019-01-28</Date><Time>11:00:09Z</Time></SpecialBookDateTime_x>'
+            '<SpecialBookDateTime_x><Date>2019-01-28</Date><Time>11:00:09Z</Time></SpecialBookDateTime_x>'
         ).setType(SpecialBookDateTime_x.class).toObject();
 
         System.assertEquals(Date.newInstance(2019, 1, 28), specialBook.date_x);
@@ -411,7 +411,7 @@ private class XMLTest {
     private static void deserializeReservedWordCustom()
     {
         SpecialBookDateTime_AnotherSuffix specialBook = (SpecialBookDateTime_AnotherSuffix) XML.deserialize(
-        '<SpecialBookDateTime_AnotherSuffix><Date>2019-01-28</Date><Time>11:00:09Z</Time></SpecialBookDateTime_AnotherSuffix>'
+            '<SpecialBookDateTime_AnotherSuffix><Date>2019-01-28</Date><Time>11:00:09Z</Time></SpecialBookDateTime_AnotherSuffix>'
         ).setType(SpecialBookDateTime_AnotherSuffix.class).setReservedWordSuffix('_AnotherSuffix').toObject();
 
         System.assertEquals(Date.newInstance(2019, 1, 28), specialBook.date_AnotherSuffix);
@@ -570,7 +570,9 @@ private class XMLTest {
     @IsTest
     private static void serializeSetXMLHeaderAttributesSuppressNulls()
     {
-        String xmlString = XML.serialize(new List<String>()).embedAttributes().setRootAttributes(new Map<String, String>{'Attr' => 'No Attributes'}).suppressNulls().toString();
+        String xmlString = XML.serialize(new List<String>()).embedAttributes().setRootAttributes(new Map<String, String>{
+            'Attr' => 'No Attributes'
+        }).suppressNulls().toString();
         System.assertEquals('<elements Attr="No Attributes" />', xmlString);
     }
 
@@ -591,7 +593,9 @@ private class XMLTest {
     @IsTest
     private static void serializeShowEncodingOneElement()
     {
-        String xmlString = XML.serialize(new List<String>{'a'}).showEncoding().toString();
+        String xmlString = XML.serialize(new List<String>{
+            'a'
+        }).showEncoding().toString();
         System.assertEquals('<?xml version="1.0" encoding="UTF-8"?><element>a</element>', xmlString);
     }
 
@@ -618,56 +622,86 @@ private class XMLTest {
     private static void deserializeEmptyNewLine()
     {
         Object obj = XML.deserialize('<element>\r\n</element>').toObject();
-        System.assertEquals(new Map<String, String>{'element' => null}, obj);
+        System.assertEquals(new Map<String, String>{
+            'element' => null
+        }, obj);
     }
 
     @IsTest
     private static void deserializeOneElement()
     {
         Object obj = XML.deserialize('<element>a</element>').toObject();
-        System.assertEquals(new Map<String, String>{'element' => 'a'}, obj);
+        System.assertEquals(new Map<String, String>{
+            'element' => 'a'
+        }, obj);
     }
 
     @IsTest
     private static void deserializeSpecialCharacters()
     {
         Object obj = XML.deserialize('<element>&lt;&gt;</element>').toObject();
-        System.assertEquals(new Map<String, String>{'element' => '<>'}, obj);
+        System.assertEquals(new Map<String, String>{
+            'element' => '<>'
+        }, obj);
     }
 
     @IsTest
     private static void deserializeEmptyList()
     {
         Object obj = XML.deserialize('<elements></elements>').toObject();
-        System.assertEquals(new Map<String, String>{'elements' => null}, obj);
+        System.assertEquals(new Map<String, String>{
+            'elements' => null
+        }, obj);
     }
 
     @IsTest
     private static void deserializeEmptyListArrayNode()
     {
         Object obj = XML.deserialize('<elements></elements>').addArrayNode('elements').toObject();
-        System.assertEquals(new Map<String, Object>{'elements' => new List<String>{null}}, obj);
+        System.assertEquals(new Map<String, Object>{
+            'elements' => new List<String>{
+                null
+            }
+        }, obj);
     }
 
     @IsTest
     private static void deserializeEmptyListArrayNodeChild()
     {
         Object obj = XML.deserialize('<elements><element></element></elements>').addArrayNode('element').toObject();
-        System.assertEquals(new Map<String, Object>{'elements' => new Map<String, Object>{'element' => new List<String>{null}}}, obj);
+        System.assertEquals(new Map<String, Object>{
+            'elements' => new Map<String, Object>{
+                'element' => new List<String>{
+                    null
+                }
+            }
+        }, obj);
     }
 
     @IsTest
     private static void deserializeEmptyListArrayNodes()
     {
-        Object obj = XML.deserialize('<elements><element>123</element></elements>').setArrayNodes(new Set<String>{'element', 'elements'}).toObject();
-        System.assertEquals(new Map<String, Object>{'elements' => new List<Object>{new Map<String, Object>{'element' => new List<String>{'123'}}}}, obj);
+        Object obj = XML.deserialize('<elements><element>123</element></elements>').setArrayNodes(new Set<String>{
+            'element', 'elements'
+        }).toObject();
+        System.assertEquals(new Map<String, Object>{
+            'elements' => new List<Object>{
+                new Map<String, Object>{
+                    'element' => new List<String>{
+                        '123'
+                    }
+                }
+            }
+        }, obj);
     }
 
     @IsTest
     private static void deserializeEmptyListClose()
     {
         Object obj = XML.deserialize('<elements />').toObject();
-        System.assertEquals(new Map<String, String>{'elements' => null}, obj);
+        System.assertEquals(new Map<String, String>{
+            'elements' => null
+        }, obj);
     }
 
     @IsTest
@@ -676,8 +710,7 @@ private class XMLTest {
         try {
             XML.deserialize(null).toObject();
             throw new XmlException('Error not thrown.');
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             System.assertEquals('The XML string is invalid, value: null', e.getMessage());
         }
     }
@@ -704,8 +737,7 @@ private class XMLTest {
         try {
             XML.deserialize('').toObject();
             throw new XmlException('Error not thrown.');
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             System.assertEquals('The XML string is invalid, value: ', e.getMessage());
         }
     }
@@ -716,8 +748,7 @@ private class XMLTest {
         try {
             XML.deserialize('invalid').toObject();
             throw new XmlException('Error not thrown.');
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             System.assertEquals('The XML string is invalid, value: invalid', e.getMessage());
         }
     }
@@ -779,7 +810,9 @@ private class XMLTest {
                 '{https://example1.org}a' => 'b',
                 '{https://example2.org}c' => 'd'
             }
-        }).setNamespaces(new Map<String, String>{'https://example1.org' => 'p1', 'https://example2.org' => 'p2'}).toString();
+        }).setNamespaces(new Map<String, String>{
+            'https://example1.org' => 'p1', 'https://example2.org' => 'p2'
+        }).toString();
         System.assertEquals('<element xmlns:p1="https://example1.org" xmlns:p2="https://example2.org"><p2:c>d</p2:c><p1:a>b</p1:a></element>', xmlString);
     }
 
@@ -790,7 +823,9 @@ private class XMLTest {
             new Map<String, String>{
                 '{https://example1.org}a' => 'b'
             }
-        }).setNamespaces(new Map<String, String>{'https://example2.org' => 'p2'}).toString();
+        }).setNamespaces(new Map<String, String>{
+            'https://example2.org' => 'p2'
+        }).toString();
         System.assertEquals('<element xmlns:p2="https://example2.org"><a>b</a></element>', xmlString);
     }
 
@@ -827,7 +862,9 @@ private class XMLTest {
                 '{https://example1.org}a' => 'b',
                 '{https://example2.org}c' => 'd'
             }
-        }).setNamespaces(new Map<String, String>{'https://example1.org' => 'p1', 'https://example2.org' => 'p2'}).toString();
+        }).setNamespaces(new Map<String, String>{
+            'https://example1.org' => 'p1', 'https://example2.org' => 'p2'
+        }).toString();
 
         System.assertEquals(new Map<String, Object>{
             'element' => new Map<String, String>{
@@ -845,7 +882,9 @@ private class XMLTest {
                 '{https://example1.org}a' => 'b',
                 '{https://example2.org}c' => 'd'
             }
-        }).setNamespaces(new Map<String, String>{'https://example1.org' => 'p1', 'https://example2.org' => 'p2'}).toString();
+        }).setNamespaces(new Map<String, String>{
+            'https://example1.org' => 'p1', 'https://example2.org' => 'p2'
+        }).toString();
 
         System.assertEquals(new Map<String, Object>{
             'element' => new Map<String, String>{
@@ -864,7 +903,9 @@ private class XMLTest {
                 '{https://example2.org}c' => 'd',
                 'e' => 'f'
             }
-        }).setNamespaces(new Map<String, String>{'https://example1.org' => 'p1', 'https://example2.org' => 'p2'}).toString();
+        }).setNamespaces(new Map<String, String>{
+            'https://example1.org' => 'p1', 'https://example2.org' => 'p2'
+        }).toString();
 
         System.assertEquals(new Map<String, Object>{
             'element' => new Map<String, String>{
@@ -892,9 +933,14 @@ private class XMLTest {
             new Catalog(
                 new Books(
                     new List<Book>{
-                        new Book('title1', new Authors(new List<String>{'Name1', 'Name2'}), '23.00'),
-                        new Book('title2', new Authors(new List<String>{'Name3'}), '23.00'),
-                        new Book('title5', new Authors(new List<String>{}), null)
+                        new Book('title1', new Authors(new List<String>{
+                            'Name1', 'Name2'
+                        }), '23.00'),
+                        new Book('title2', new Authors(new List<String>{
+                            'Name3'
+                        }), '23.00'),
+                        new Book('title5', new Authors(new List<String>{
+                        }), null)
                     }
                 )
             )
@@ -911,9 +957,14 @@ private class XMLTest {
             new Catalog(
                 new Books(
                     new List<Book>{
-                        new Book('title1', new Authors(new List<String>{'Name1', 'Name2'}), '23.00'),
-                        new Book('title2', new Authors(new List<String>{'Name3'}), '23.00'),
-                        new Book('title5', new Authors(new List<String>{}), null)
+                        new Book('title1', new Authors(new List<String>{
+                            'Name1', 'Name2'
+                        }), '23.00'),
+                        new Book('title2', new Authors(new List<String>{
+                            'Name3'
+                        }), '23.00'),
+                        new Book('title5', new Authors(new List<String>{
+                        }), null)
                     }
                 )
             )
@@ -930,9 +981,14 @@ private class XMLTest {
             new Catalog(
                 new Books(
                     new List<Book>{
-                        new Book('title1', new Authors(new List<String>{'Name1', 'Name2'}), '23.00'),
-                        new Book('title2', new Authors(new List<String>{'Name3'}), '23.00'),
-                        new Book('title5', new Authors(new List<String>{}), null)
+                        new Book('title1', new Authors(new List<String>{
+                            'Name1', 'Name2'
+                        }), '23.00'),
+                        new Book('title2', new Authors(new List<String>{
+                            'Name3'
+                        }), '23.00'),
+                        new Book('title5', new Authors(new List<String>{
+                        }), null)
                     }
                 )
             )
@@ -949,8 +1005,12 @@ private class XMLTest {
             new Catalog(
                 new Books(
                     new List<Book>{
-                        new Book('title1', new Authors(new List<String>{'Name1', 'Name2'}), '23.00'),
-                        new Book('title1', new Authors(new List<String>{'Name3', 'Name4'}), '23.00')
+                        new Book('title1', new Authors(new List<String>{
+                            'Name1', 'Name2'
+                        }), '23.00'),
+                        new Book('title1', new Authors(new List<String>{
+                            'Name3', 'Name4'
+                        }), '23.00')
                     }
                 )
             )
@@ -967,8 +1027,12 @@ private class XMLTest {
             new Catalog(
                 new Books(
                     new List<Book>{
-                        new Book('title1', new Authors(new List<String>{'Name1', 'Name2'}), '23.00'),
-                        new Book('title2', new Authors(new List<String>{'Name3'}), '23.00'),
+                        new Book('title1', new Authors(new List<String>{
+                            'Name1', 'Name2'
+                        }), '23.00'),
+                        new Book('title2', new Authors(new List<String>{
+                            'Name3'
+                        }), '23.00'),
                         new Book('title5', null, null)
                     }
                 )
@@ -978,7 +1042,7 @@ private class XMLTest {
         String xmlString = XML.serialize(libraryObject).setRootTag('Library').toString();
         System.assertEquals(String.valueOf(libraryObject),
             String.valueOf(XML.deserialize(xmlString, Library.class)
-            .addArrayNode('author').toObject())
+                .addArrayNode('author').toObject())
         );
     }
 
@@ -998,7 +1062,9 @@ private class XMLTest {
         String xmlString = XML.serialize(libraryObject).setRootTag('Library').toString();
         System.assertEquals(String.valueOf(libraryObject),
             String.valueOf(XML.deserialize(xmlString, Library.class)
-            .setArrayNodes(new Set<String>{'author','book'}).toObject())
+                .setArrayNodes(new Set<String>{
+                    'author', 'book'
+                }).toObject())
         );
     }
 
@@ -1036,15 +1102,19 @@ private class XMLTest {
     public static void deserializeObject()
     {
         Library library = (Library) XML.deserialize(
-        '<library><catalog><books><book><title>title1</title><price>23.00</price><authors><author>Name1</author><author>Name2</author></authors></book><book><title>title2</title><price>23.00</price><authors><author>Name3</author><author>Name4</author></authors></book><book><title>title5</title><price /><authors><author /></authors></book></books></catalog></library>'
+            '<library><catalog><books><book><title>title1</title><price>23.00</price><authors><author>Name1</author><author>Name2</author></authors></book><book><title>title2</title><price>23.00</price><authors><author>Name3</author><author>Name4</author></authors></book><book><title>title5</title><price /><authors><author /></authors></book></books></catalog></library>'
         ).setType(Library.class).toObject();
 
         System.assertEquals('title1', library.catalog.books.book[0].title);
-        System.assertEquals(JSON.serialize(new Authors(new List<String>{'Name1', 'Name2'})), JSON.serialize(library.catalog.books.book[0].authors));
+        System.assertEquals(JSON.serialize(new Authors(new List<String>{
+            'Name1', 'Name2'
+        })), JSON.serialize(library.catalog.books.book[0].authors));
         System.assertEquals('23.00', library.catalog.books.book[0].price);
 
         System.assertEquals('title2', library.catalog.books.book[1].title);
-        System.assertEquals(JSON.serialize(new Authors(new List<String>{'Name3', 'Name4'})), JSON.serialize(library.catalog.books.book[1].authors));
+        System.assertEquals(JSON.serialize(new Authors(new List<String>{
+            'Name3', 'Name4'
+        })), JSON.serialize(library.catalog.books.book[1].authors));
         System.assertEquals('23.00', library.catalog.books.book[1].price);
     }
 
@@ -1053,7 +1123,7 @@ private class XMLTest {
     {
         try {
             XML.deserialize(
-            '<library><catalog><books><book><title>title1</title><price>23.00</price><authors><author>Name1</author><author>Name2</author></authors></book><book><title>title2</title><price>23.00</price><authors><author>Name4</author></authors></book><book><title>title5</title><price /><authors><author /></authors></book></books></catalog></library>'
+                '<library><catalog><books><book><title>title1</title><price>23.00</price><authors><author>Name1</author><author>Name2</author></authors></book><book><title>title2</title><price>23.00</price><authors><author>Name4</author></authors></book><book><title>title5</title><price /><authors><author /></authors></book></books></catalog></library>'
             ).setType(Library.class).toObject();
             System.assert(false);
         } catch (XmlException e) {
@@ -1065,15 +1135,20 @@ private class XMLTest {
     public static void serializeObjectNoAttributes()
     {
         Library library = new Library(
-          new Catalog(
-            new Books(
-              new List<Book>{
-                new Book('title1', new Authors(new List<String>{'Name1', 'Name2'}), '23.00'),
-                new Book('title2', new Authors(new List<String>{'Name3'}), '23.00'),
-                new Book('title5', new Authors(new List<String>{}), null)
-              }
+            new Catalog(
+                new Books(
+                    new List<Book>{
+                        new Book('title1', new Authors(new List<String>{
+                            'Name1', 'Name2'
+                        }), '23.00'),
+                        new Book('title2', new Authors(new List<String>{
+                            'Name3'
+                        }), '23.00'),
+                        new Book('title5', new Authors(new List<String>{
+                        }), null)
+                    }
+                )
             )
-          )
         );
 
         String xmlString = XML.serialize(library).setRootTag('library').embedAttributes().toString();
@@ -1171,7 +1246,9 @@ private class XMLTest {
         book2.attributes.put('key2', 'value2');
         book2.self = 'title2';
 
-        String xmlString = XML.serialize(new List<BookWithStringAttributesSelf>{book1, book2}).setRootTag('books').embedAttributes().toString();
+        String xmlString = XML.serialize(new List<BookWithStringAttributesSelf>{
+            book1, book2
+        }).setRootTag('books').embedAttributes().toString();
         System.assertEquals('<books><element key1="value1">title1</element><element key2="value2">title2</element></books>', xmlString);
     }
 
@@ -1224,7 +1301,9 @@ private class XMLTest {
     private class Library {
         public Catalog catalog;
 
-        public Library() {}
+        public Library()
+        {
+        }
 
         public Library(Catalog catalog)
         {
@@ -1235,7 +1314,9 @@ private class XMLTest {
     private class Catalog {
         public Books books;
 
-        public Catalog() {}
+        public Catalog()
+        {
+        }
 
         public Catalog(Books books)
         {
@@ -1246,7 +1327,9 @@ private class XMLTest {
     private class Books {
         public List<Book> book;
 
-        public Books() {}
+        public Books()
+        {
+        }
 
         public Books(List<Book> book)
         {
@@ -1259,7 +1342,9 @@ private class XMLTest {
         public Authors authors;
         public String price;
 
-        public Book() {}
+        public Book()
+        {
+        }
 
         public Book(String title, Authors authors, String price)
         {
@@ -1279,7 +1364,9 @@ private class XMLTest {
     private class Authors {
         public List<String> author;
 
-        public Authors() {}
+        public Authors()
+        {
+        }
 
         public Authors(List<String> author)
         {

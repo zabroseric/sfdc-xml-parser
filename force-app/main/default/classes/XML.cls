@@ -29,7 +29,9 @@ public class XML {
 
     private static final String DEFAULT_ROOT_TAG = 'elements';
     private static final String DEFAULT_ELEMENT_TAG = 'element';
-    private static final List<String> RESERVED_WORDS = new List<String>{'abstract', 'activate', 'and', 'any', 'array', 'as', 'asc', 'autonomous', 'begin', 'bigdecimal', 'blob', 'boolean', 'break', 'bulk', 'by', 'byte', 'case', 'cast', 'catch', 'char', 'class', 'collect', 'commit', 'const', 'continue', 'currency', 'date', 'datetime', 'decimal', 'default', 'delete', 'desc', 'do', 'double', 'else', 'end', 'enum', 'exception', 'exit', 'export', 'extends', 'false', 'final', 'finally', 'float', 'for', 'from', 'global', 'goto', 'group', 'having', 'hint', 'if', 'implements', 'import', 'in', 'inner', 'insert', 'instanceof', 'int', 'integer', 'interface', 'into', 'join', 'like', 'limit', 'list', 'long', 'loop', 'map', 'merge', 'new', 'not', 'null', 'nulls', 'number', 'object', 'of', 'on', 'or', 'outer', 'override', 'package', 'parallel', 'pragma', 'private', 'protected', 'public', 'retrieve', 'return', 'rollback', 'select', 'set', 'short', 'sObject', 'sort', 'static', 'string', 'super', 'switch', 'synchronized', 'system', 'testmethod', 'then', 'this', 'throw', 'time', 'transaction', 'trigger', 'true', 'try', 'undelete', 'update', 'upsert', 'using', 'virtual', 'void', 'webservice', 'when', 'where', 'while'};
+    private static final List<String> RESERVED_WORDS = new List<String>{
+        'abstract', 'activate', 'and', 'any', 'array', 'as', 'asc', 'autonomous', 'begin', 'bigdecimal', 'blob', 'boolean', 'break', 'bulk', 'by', 'byte', 'case', 'cast', 'catch', 'char', 'class', 'collect', 'commit', 'const', 'continue', 'currency', 'date', 'datetime', 'decimal', 'default', 'delete', 'desc', 'do', 'double', 'else', 'end', 'enum', 'exception', 'exit', 'export', 'extends', 'false', 'final', 'finally', 'float', 'for', 'from', 'global', 'goto', 'group', 'having', 'hint', 'if', 'implements', 'import', 'in', 'inner', 'insert', 'instanceof', 'int', 'integer', 'interface', 'into', 'join', 'like', 'limit', 'list', 'long', 'loop', 'map', 'merge', 'new', 'not', 'null', 'nulls', 'number', 'object', 'of', 'on', 'or', 'outer', 'override', 'package', 'parallel', 'pragma', 'private', 'protected', 'public', 'retrieve', 'return', 'rollback', 'select', 'set', 'short', 'sObject', 'sort', 'static', 'string', 'super', 'switch', 'synchronized', 'system', 'testmethod', 'then', 'this', 'throw', 'time', 'transaction', 'trigger', 'true', 'try', 'undelete', 'update', 'upsert', 'using', 'virtual', 'void', 'webservice', 'when', 'where', 'while'
+    };
 
     /**
      * Initialises the writer class and exposes the methods provided
@@ -120,16 +122,16 @@ public class XML {
             String xmlString = document.toXmlString();
 
             // If we chose to hide the encoding, remove it.
-            if ( !showEncoding ) {
+            if (!showEncoding) {
                 xmlString = xmlString.replace('<?xml version="1.0" encoding="UTF-8"?>', '');
             }
 
             // Flatten the elements if possible, so Elements / Element => Element
-            if ( document.getRootElement().getChildElements().size() == 1 && rootTag == DEFAULT_ROOT_TAG ) {
+            if (document.getRootElement().getChildElements().size() == 1 && rootTag == DEFAULT_ROOT_TAG) {
                 xmlString = xmlString
                     .replaceAll('<(/?)(' + rootTag + '|' + elementTag + ')([^>]*)>' +
                         '\\s*(<(/?)(' + rootTag + '|' + elementTag + ')([^>]*)>)?',
-                    '<$1' + elementTag + '$3>');
+                        '<$1' + elementTag + '$3>');
             }
 
             // If there are rootAttributes in the closing tags, remove them.
@@ -276,7 +278,7 @@ public class XML {
          */
         public Writer setNamespaces(Map<String, String> namespaces)
         {
-            for ( String uri : namespaces.keySet() ) {
+            for (String uri : namespaces.keySet()) {
                 addNamespace(uri, namespaces.get(uri));
             }
             return this;
@@ -330,15 +332,17 @@ public class XML {
 
             // Iterate over the individual pieces of the split tags
             // detecting how many indents are required on every line.
-            for ( String split : xmlStringSplit ) {
-                if ( split.left(1) == '/' ) {
+            for (String split : xmlStringSplit) {
+                if (split.left(1) == '/') {
                     indents--;
                 }
 
-                for ( Integer i = 0; i < indents; i++ ) { xmlStringFormatted += '  '; }
+                for (Integer i = 0; i < indents; i++) {
+                    xmlStringFormatted += '  ';
+                }
                 xmlStringFormatted += '<' + split + '>\r\n';
 
-                if ( !split.contains('>') && !split.contains('<?xml') && split.left(1) != '/' && split.right(1) != '/' ) {
+                if (!split.contains('>') && !split.contains('<?xml') && split.left(1) != '/' && split.right(1) != '/') {
                     indents++;
                 }
             }
@@ -361,14 +365,12 @@ public class XML {
         {
             // Detects and sets both the root and element tags based on any SObjects that can be found from
             // the object provided.
-            if ( !detectRootTag ) {
+            if (!detectRootTag) {
                 // Do nothing.
-            }
-            else if ( obj.instanceOfSObjectMap() || obj.instanceOfSObjectList() ) {
+            } else if (obj.instanceOfSObjectMap() || obj.instanceOfSObjectList()) {
                 rootTag = obj.getSObjectDescribe().labelPlural;
                 elementTag = obj.getSObjectDescribe().label;
-            }
-            else if ( obj.instanceOfSObject() ) {
+            } else if (obj.instanceOfSObject()) {
                 rootTag = obj.getSObjectDescribe().label;
             }
 
@@ -377,42 +379,39 @@ public class XML {
             Dom.XmlNode xmlNode = document.createRootElement(rootTag, null, null);
 
             // If we have chosen to embed attributes, add them to the current node.
-            if ( embedAttributes && obj.hasAttributes() )  {
-                for ( String attrKey : obj.getAttributes().keySet() ) {
+            if (embedAttributes && obj.hasAttributes()) {
+                for (String attrKey : obj.getAttributes().keySet()) {
                     xmlNode.setAttribute(
-                      attrKey,
-                      obj.getAttributes().get(attrKey) != null ? String.valueOf(obj.getAttributes().get(attrKey)) : 'null'
+                        attrKey,
+                        obj.getAttributes().get(attrKey) != null ? String.valueOf(obj.getAttributes().get(attrKey)) : 'null'
                     );
                 }
             }
 
             // Detect the type of root object we have and parse it.
-            if ( obj.instanceOfList() && !obj.isEmpty() ) {
+            if (obj.instanceOfList() && !obj.isEmpty()) {
                 parseList(obj.toList(), elementTag, xmlNode);
-            }
-            else if ( obj.instanceOfMap() && !obj.isEmpty() ) {
+            } else if (obj.instanceOfMap() && !obj.isEmpty()) {
                 parseMap(obj.toMap(), xmlNode);
             }
 
             // Otherwise if we have primitive type, parse this.
-            else if ( !(obj.isEmpty() && suppressNulls) ) {
+            else if (!(obj.isEmpty() && suppressNulls)) {
                 xmlNode.addTextNode(parsePrimitive(obj));
             }
 
             // Set the attributes on the root node.
-            for ( String key : this.rootAttributes.keySet() ) {
+            for (String key : this.rootAttributes.keySet()) {
                 String value = this.rootAttributes.get(key);
 
-                if ( embedAttributes || key.startsWith('xmlns:') ) {
+                if (embedAttributes || key.startsWith('xmlns:')) {
                     document.getRootElement().setAttribute(key, value);
-                }
-                else if ( document.getRootElement().getChildElement('attributes', null) != null ) {
+                } else if (document.getRootElement().getChildElement('attributes', null) != null) {
                     document.getRootElement().getChildElement('attributes', null)
-                      .addChildElement(key, null, null).addTextNode(value);
-                }
-                else {
+                        .addChildElement(key, null, null).addTextNode(value);
+                } else {
                     document.getRootElement().addChildElement('attributes', null, null)
-                      .addChildElement(key, null, null).addTextNode(value);
+                        .addChildElement(key, null, null).addTextNode(value);
                 }
             }
 
@@ -450,7 +449,9 @@ public class XML {
         private Boolean parseMap(Map<String, Object> values, Dom.XmlNode xmlNode)
         {
             Boolean isEmptyChild = parseMulti(new List<String>(values.keySet()), values.values(), xmlNode);
-            if ( isEmptyChild && xmlNode.getParent() != null ) { xmlNode.getParent().removeChild(xmlNode); }
+            if (isEmptyChild && xmlNode.getParent() != null) {
+                xmlNode.getParent().removeChild(xmlNode);
+            }
             return isEmptyChild;
         }
 
@@ -466,8 +467,12 @@ public class XML {
          */
         private Boolean parseList(List<Object> values, String key, Dom.XmlNode xmlNode)
         {
-            Boolean isEmptyChild = parseMulti(new List<String>{key}, values, xmlNode);
-            if ( isEmptyChild && xmlNode.getParent() != null ) { xmlNode.getParent().removeChild(xmlNode); }
+            Boolean isEmptyChild = parseMulti(new List<String>{
+                key
+            }, values, xmlNode);
+            if (isEmptyChild && xmlNode.getParent() != null) {
+                xmlNode.getParent().removeChild(xmlNode);
+            }
             return isEmptyChild;
         }
 
@@ -485,7 +490,7 @@ public class XML {
         {
             Integer notEmptyNumber = 0;
 
-            for ( Integer i = 0; i < values.size(); i++ ) {
+            for (Integer i = 0; i < values.size(); i++) {
                 // If we have a list, keep using the same key.
                 String key = setNamespace(keys.get(keys.size() - 1 > i ? i : keys.size() - 1));
 
@@ -497,38 +502,36 @@ public class XML {
                 Dom.XmlNode childNode;
 
                 // If we have chosen to embed attributes, add them to the tag.
-                if ( embedAttributes && key == 'attributes' ) {
+                if (embedAttributes && key == 'attributes') {
                     continue;
                 }
 
                 // VALIDATION:
                 // Ensure we only have one either text or a child node when using the self keyword.
-                if ( (key == 'self' && !xmlNode.getChildren().isEmpty()) || ((obj.instanceOfMap() || obj.instanceOfList()) && !String.isEmpty(xmlNode.getText())) ) {
+                if ((key == 'self' && !xmlNode.getChildren().isEmpty()) || ((obj.instanceOfMap() || obj.instanceOfList()) && !String.isEmpty(xmlNode.getText()))) {
                     System.debug(xmlNode.getText());
                     throw new XmlException('The object contains both the self keyword, and other child elements, please remove on of these.');
                 }
 
                 // If we have an empty list and have chosen not to suppress
                 // nulls, ensure this is added to the xml.
-                if ( obj.instanceOfList() && obj.isEmpty() && !suppressNulls ) {
+                if (obj.instanceOfList() && obj.isEmpty() && !suppressNulls) {
                     childNode = xmlNode.addChildElement(key, null, null);
                 }
 
                 // Convert the lists / maps, iterate over these and determine if the
                 // result was empty.
-                else if ( obj.instanceOfList() ) {
+                else if (obj.instanceOfList()) {
                     notEmptyNumber += parseList(obj.toList(), key, xmlNode) ? 0 : 1;
-                }
-                else if ( obj.instanceOfMap() ) {
+                } else if (obj.instanceOfMap()) {
                     childNode = xmlNode.addChildElement(key, null, null);
                     notEmptyNumber += parseMap(obj.toMap(), childNode) ? 0 : 1;
-                }
-                else if ( !obj.isEmpty() && key == 'self' && xmlNode.getChildren().isEmpty() ) {
+                } else if (!obj.isEmpty() && key == 'self' && xmlNode.getChildren().isEmpty()) {
                     childNode = xmlNode.addTextNode(parsePrimitive(obj));
                     notEmptyNumber += 1;
                 }
                 // If we have a value don't iterate and just add the node.
-                else if ( !obj.isEmpty() ) {
+                else if (!obj.isEmpty()) {
                     childNode = xmlNode
                         .addChildElement(key, null, null)
                         .addTextNode(parsePrimitive(obj));
@@ -536,14 +539,14 @@ public class XML {
                 }
 
                 // If we have chosen not to suppress nulls, ensure an empty tag is there.
-                else if ( !suppressNulls ) {
+                else if (!suppressNulls) {
                     childNode = xmlNode.addChildElement(key, null, null);
                     notEmptyNumber += 1;
                 }
 
                 // If we have chosen to embed attributes, add them to the node we have just added.
-                if ( embedAttributes && obj.hasAttributes() )  {
-                    for ( String attrKey : obj.getAttributes().keySet() ) {
+                if (embedAttributes && obj.hasAttributes()) {
+                    for (String attrKey : obj.getAttributes().keySet()) {
                         childNode.setAttribute(attrKey, String.valueOf(obj.getAttributes().get(attrKey)));
                     }
                 }
@@ -562,12 +565,12 @@ public class XML {
          */
         private String setNamespace(String tagName)
         {
-            if ( !tagName.contains('{') ) {
+            if (!tagName.contains('{')) {
                 return tagName;
             }
 
-            for ( String uri : namespaces.keySet() ) {
-                if ( tagName.contains('{' + uri + '}') ) {
+            for (String uri : namespaces.keySet()) {
+                if (tagName.contains('{' + uri + '}')) {
                     return tagName.replace('{' + uri + '}', namespaces.get(uri) + ':');
                 }
             }
@@ -588,7 +591,7 @@ public class XML {
      */
     public class Reader {
 
-        private String xmlString { get { return new Utils().replaceXMLReservedWords(xmlString, reservedWordSuffix); } set; }
+        private String xmlString { get {return new Utils().replaceXMLReservedWords(xmlString, reservedWordSuffix);} set; }
         private Type apexType;
         private String apexTypeName;
         private Set<String> arrayNodes = new Set<String>();
@@ -615,11 +618,12 @@ public class XML {
          *
          * @return
          */
-        public Object toObject() {
+        public Object toObject()
+        {
             try {
                 return toObjectInternal();
             } catch (JSONException e) {
-                if ( e.getMessage().contains('Expected List') ) {
+                if (e.getMessage().contains('Expected List')) {
                     throw new XmlException('An array node has not been correctly set by value ' +
                         e.getMessage().replaceAll('.+(".+").+', '$1')
                     );
@@ -639,34 +643,33 @@ public class XML {
 
             try {
                 objectMap = parse();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 throw new XmlException('The XML string is invalid, value: ' + xmlString);
             }
 
             // If we haven't passed a type, return the map we have.
-            if ( apexType == null ) {
+            if (apexType == null) {
                 return objectMap;
             }
 
             // If the type is deserializable and we have found the type as a key in the map,
             // return the value of this key.
-            else if ( ((Type) Deserializable.class).isAssignableFrom(apexType) && new Utils().containsCaseInsensitive(objectMap, apexTypeName) ) {
+            else if (((Type) Deserializable.class).isAssignableFrom(apexType) && new Utils().containsCaseInsensitive(objectMap, apexTypeName)) {
                 return ((Deserializable) apexType.newInstance()).xmlDeserialize((Object) new Utils().getObjCaseInsensitive(objectMap, apexTypeName));
             }
 
             // Otherwise if the type is deserializable, pass the entire map.
-            else if ( ((Type) Deserializable.class).isAssignableFrom(apexType) ) {
+            else if (((Type) Deserializable.class).isAssignableFrom(apexType)) {
                 return ((Deserializable) apexType.newInstance()).xmlDeserialize(objectMap);
             }
 
             // If the apex type is a partial key with the map use that, this is useful for nested classes.
-            else if ( new Utils().containsCaseInsensitive(objectMap, apexTypeName) ) {
+            else if (new Utils().containsCaseInsensitive(objectMap, apexTypeName)) {
                 return JSON.deserialize(JSON.serialize(new Utils().getObjCaseInsensitive(objectMap, apexTypeName)), apexType);
             }
 
             // If the apex type we have is a list, get the list from the map.
-            else if ( apexType.toString().startsWith('List') ) {
+            else if (apexType.toString().startsWith('List')) {
                 return JSON.deserialize('[' + JSON.serialize(objectMap).substringAfter('[').substringBeforeLast(']') + ']', apexType);
             }
 
@@ -726,10 +729,9 @@ public class XML {
 
 
             // If the apex type is a partial key with the map use that, this is useful for nested classes.
-            if ( apexType != null && apexType.getName().contains('.') ) {
+            if (apexType != null && apexType.getName().contains('.')) {
                 apexTypeName = apexType.getName().substringAfter('.');
-            }
-            else if ( apexType != null ) {
+            } else if (apexType != null) {
                 apexTypeName = apexType.getName();
             }
             return this;
@@ -827,18 +829,20 @@ public class XML {
             String tagName;
 
             Boolean hasNext = reader.hasNext();
-            if ( hasNext ) { reader.next(); }
+            if (hasNext) {
+                reader.next();
+            }
 
-            while ( hasNext ) {
+            while (hasNext) {
                 // Add the clark notation to the tag name if we have a namespace.
-                tagName = ( showNamespaces && reader.getNamespace() != null ? '{' + reader.getNamespace() + '}' : '') + reader.getLocalName();
+                tagName = (showNamespaces && reader.getNamespace() != null ? '{' + reader.getNamespace() + '}' : '') + reader.getLocalName();
 
                 // If we have a start element add this.
-                if ( reader.getEventType() == XmlTag.START_ELEMENT ) {
+                if (reader.getEventType() == XmlTag.START_ELEMENT) {
                     // Add the attributes as a separate tag to support deserialization.
                     Map<String, Object> attributeMap = new Map<String, Object>();
-                    if ( reader.getAttributeCount() > 0 ) {
-                        for ( Integer i = 0; i < reader.getAttributeCount(); i++ ) {
+                    if (reader.getAttributeCount() > 0) {
+                        for (Integer i = 0; i < reader.getAttributeCount(); i++) {
                             attributeMap.put(reader.getAttributeLocalName(i), reader.getAttributeValueAt(i));
                         }
                     }
@@ -846,9 +850,9 @@ public class XML {
                     objectCurrent = parseNested(reader, tagName);
 
                     // If we have a map as our current tag, add the attributes tag / merge the values.
-                    if ( objectCurrent instanceof Map<String, Object> && !attributeMap.isEmpty() ) {
+                    if (objectCurrent instanceof Map<String, Object> && !attributeMap.isEmpty()) {
                         Map<String, Object> objectCurrentMap = ((Map<String, Object>) objectCurrent);
-                        if ( objectCurrentMap.containsKey('attributes') ) {
+                        if (objectCurrentMap.containsKey('attributes')) {
                             ((Map<String, Object>) objectCurrentMap.get('attributes')).putAll(attributeMap);
                         } else {
                             objectCurrentMap.put('attributes', attributeMap);
@@ -856,15 +860,17 @@ public class XML {
                     }
 
                     // If we haven't come across this node, and we should make it array, create one.
-                    if ( !objectMap.containsKey(tagName) && arrayNodes.contains(tagName) ) {
-                        objectMap.put(tagName, new List<Object>{objectCurrent});
+                    if (!objectMap.containsKey(tagName) && arrayNodes.contains(tagName)) {
+                        objectMap.put(tagName, new List<Object>{
+                            objectCurrent
+                        });
                     }
                     // If we haven't come across this node, by default create a map.
-                    else if ( !objectMap.containsKey(tagName) ) {
+                    else if (!objectMap.containsKey(tagName)) {
                         objectMap.put(tagName, objectCurrent);
                     }
                     // If we have this node, and it's a list add to it.
-                    else if ( objectMap.get(tagName) instanceof List<Object> ) {
+                    else if (objectMap.get(tagName) instanceof List<Object>) {
                         ((List<Object>) objectMap.get(tagName)).add(objectCurrent);
                     }
                     // Otherwise turn our map into a list.
@@ -877,24 +883,26 @@ public class XML {
 
                     // If we have chosen to filter the namespace remove the node we generated.
                     // This way we still loop through the reader.
-                    if ( filterNamespace != null && tagName.contains('{') && !tagName.contains(filterNamespace) ) {
+                    if (filterNamespace != null && tagName.contains('{') && !tagName.contains(filterNamespace)) {
                         objectMap.remove(tagName);
                     }
 
                 }
 
                 // We we are ending our starting tag break this loop.
-                else if ( reader.getEventType() == XmlTag.END_ELEMENT && elementName == reader.getLocalName() ) {
+                else if (reader.getEventType() == XmlTag.END_ELEMENT && elementName == reader.getLocalName()) {
                     break;
                 }
 
                 // If we have text return and the namespace is valid, return it.
-                else if ( reader.getEventType() == XmlTag.CHARACTERS ) {
+                else if (reader.getEventType() == XmlTag.CHARACTERS) {
                     return reader.getText();
                 }
 
                 hasNext = reader.hasNext();
-                if ( hasNext ) { reader.next(); }
+                if (hasNext) {
+                    reader.next();
+                }
             }
             return objectMap.isEmpty() ? null : objectMap;
         }
@@ -926,7 +934,8 @@ public class XML {
          *
          * @return
          */
-        public Boolean containsCaseInsensitive(Map<String, Object> objs, String key) {
+        public Boolean containsCaseInsensitive(Map<String, Object> objs, String key)
+        {
             return this.getObjCaseInsensitive(objs, key) != null;
         }
 
@@ -938,7 +947,8 @@ public class XML {
          *
          * @return
          */
-        public Object getObjCaseInsensitive(Map<String, Object> objs, String key) {
+        public Object getObjCaseInsensitive(Map<String, Object> objs, String key)
+        {
             return objs.get(this.getKeyCaseInsensitive(objs, key));
         }
 
@@ -950,7 +960,8 @@ public class XML {
          *
          * @return
          */
-        public String getKeyCaseInsensitive(Map<String, Object> objs, String key) {
+        public String getKeyCaseInsensitive(Map<String, Object> objs, String key)
+        {
             return this.getKeySetCaseMap(objs).get(key.toLowerCase());
         }
 
@@ -962,9 +973,10 @@ public class XML {
          *
          * @return
          */
-        public Map<String, String> getKeySetCaseMap(Map<String, Object> objs) {
+        public Map<String, String> getKeySetCaseMap(Map<String, Object> objs)
+        {
             Map<String, String> keySetCaseMap = new Map<String, String>();
-            for ( String key : objs.keySet() ) {
+            for (String key : objs.keySet()) {
                 keySetCaseMap.put(key.toLowerCase(), key);
             }
             return keySetCaseMap;
@@ -981,8 +993,9 @@ public class XML {
          *
          * @return
          */
-        public String replaceXMLReservedWords(String str, String suffix) {
-            if ( str == null || suffix == null ) {
+        public String replaceXMLReservedWords(String str, String suffix)
+        {
+            if (str == null || suffix == null) {
                 return str;
             }
 
@@ -998,9 +1011,10 @@ public class XML {
          *
          * @return
          */
-        public String toUCWords(String str) {
+        public String toUCWords(String str)
+        {
             List<String> strWordArray = new List<String>();
-            for ( String strWord : str.split(' ') ) {
+            for (String strWord : str.split(' ')) {
                 strWordArray.add(strWord.substring(0, 1).toUpperCase() + strWord.substring(1, strWord.length()));
             }
             return String.join(strWordArray, ' ');
@@ -1053,7 +1067,7 @@ public class XML {
          */
         public Map<String, Object> getAttributes()
         {
-            if ( !instanceOfMap() ) {
+            if (!instanceOfMap()) {
                 return new Map<String, Object>();
             }
 
@@ -1122,13 +1136,11 @@ public class XML {
          */
         public DescribeSObjectResult getSObjectDescribe()
         {
-            if ( instanceOfSObjectList() ) {
+            if (instanceOfSObjectList()) {
                 return toSObjectList().getSObjectType().getDescribe();
-            }
-            else if ( instanceOfSObjectMap() ) {
+            } else if (instanceOfSObjectMap()) {
                 return toSObjectMap().values().getSObjectType().getDescribe();
-            }
-            else {
+            } else {
                 return toSObject().getSObjectType().getDescribe();
             }
         }
@@ -1140,8 +1152,12 @@ public class XML {
          */
         public Boolean isEmpty()
         {
-            if ( obj instanceof Map<String, Object> ) { return ((Map<String, Object>) obj).isEmpty(); }
-            if ( obj instanceof List<Object> ) { return ((List<Object>) obj).isEmpty(); }
+            if (obj instanceof Map<String, Object>) {
+                return ((Map<String, Object>) obj).isEmpty();
+            }
+            if (obj instanceof List<Object>) {
+                return ((List<Object>) obj).isEmpty();
+            }
             return obj == null || obj == '';
         }
 
@@ -1202,7 +1218,9 @@ public class XML {
          */
         public override String toString()
         {
-            if ( isEmpty() ) { return ''; }
+            if (isEmpty()) {
+                return '';
+            }
             return String.valueOf(obj);
         }
 
@@ -1312,7 +1330,7 @@ public class XML {
             if (String.isBlank(objString.replaceFirst('true|false', ''))) {
                 return 'Boolean';
             }
-            if(String.isBlank(objString.replaceFirst('[0-9]{4}-[0-9]{2}-[0-9]{2}', ''))) {
+            if (String.isBlank(objString.replaceFirst('[0-9]{4}-[0-9]{2}-[0-9]{2}', ''))) {
                 return 'Date';
             }
             if (String.isBlank(objString.replaceFirst('[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}((\\+[0-9]{4})|Z)', ''))) {
