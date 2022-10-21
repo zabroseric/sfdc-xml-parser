@@ -26,6 +26,165 @@ private class XMLTest {
 
     /*
     ---------------------------------------------
+    -- Type Tests
+    ---------------------------------------------
+     */
+    @IsTest
+    private static void typeBooleanTrue()
+    {
+        Boolean value = true;
+        XML.ObjectWrapper objectWrapper = new XML.ObjectWrapper(value);
+
+        System.assertEquals('Boolean', objectWrapper.getTypeName());
+        System.assert(objectWrapper.toBoolean());
+    }
+
+    @IsTest
+    private static void typeBooleanFalse()
+    {
+        Boolean value = false;
+        XML.ObjectWrapper objectWrapper = new XML.ObjectWrapper(value);
+
+        System.assertEquals('Boolean', objectWrapper.getTypeName());
+        System.assert(!objectWrapper.toBoolean());
+    }
+
+    @IsTest
+    private static void typeString()
+    {
+        String value = '123abc';
+        XML.ObjectWrapper objectWrapper = new XML.ObjectWrapper(value);
+
+        System.assertEquals('String', objectWrapper.getTypeName());
+        System.assertEquals(value, objectWrapper.toString());
+    }
+
+    @IsTest
+    private static void typeStringNull()
+    {
+        String value = null;
+        XML.ObjectWrapper objectWrapper = new XML.ObjectWrapper(value);
+
+        System.assertEquals('Null', objectWrapper.getTypeName());
+        System.assertEquals('', objectWrapper.toString());
+    }
+
+    @IsTest
+    private static void typeDate()
+    {
+        Date value = Date.newInstance(2022, 01, 01);
+        XML.ObjectWrapper objectWrapper = new XML.ObjectWrapper(value);
+
+        System.assertEquals('Date', objectWrapper.getTypeName());
+        System.assertEquals(0, objectWrapper.toDate().daysBetween(value));
+    }
+
+    @IsTest
+    private static void typeDatetime()
+    {
+        Datetime value = Datetime.newInstance(2022, 01, 01, 1, 2, 3);
+        XML.ObjectWrapper objectWrapper = new XML.ObjectWrapper(value);
+
+        System.assertEquals('Datetime', objectWrapper.getTypeName());
+        System.assertEquals(value.format(), objectWrapper.toDatetime().format());
+    }
+
+    @IsTest
+    private static void typeRecordDatetime()
+    {
+        Contact contact = new Contact(
+            FirstName = 'First',
+            LastName = 'Last'
+        );
+        insert contact;
+
+        Contact contactQuery = [SELECT CreatedDate FROM Contact LIMIT 1];
+        XML.ObjectWrapper objectWrapper = new XML.ObjectWrapper(contactQuery.CreatedDate);
+
+        System.assertEquals('Datetime', objectWrapper.getTypeName());
+        System.assertEquals(contactQuery.CreatedDate.format(), objectWrapper.toDatetime().format());
+    }
+
+    @IsTest
+    private static void typeTime()
+    {
+        Time value = Time.newInstance(1, 2, 3, 444);
+        XML.ObjectWrapper objectWrapper = new XML.ObjectWrapper(value);
+
+        System.assertEquals('Time', objectWrapper.getTypeName());
+        System.assertEquals(value.millisecond(), objectWrapper.toTime().millisecond());
+    }
+
+    @IsTest
+    private static void typeId()
+    {
+        Contact contact = new Contact(
+            FirstName = 'First',
+            LastName = 'Last'
+        );
+        insert contact;
+
+        XML.ObjectWrapper objectWrapper = new XML.ObjectWrapper(contact.Id);
+
+        System.assertEquals('Id', objectWrapper.getTypeName());
+        System.assertEquals(contact.Id, objectWrapper.toId());
+    }
+
+    @IsTest
+    private static void typeIntegerPositive()
+    {
+        Integer value = 123456;
+        XML.ObjectWrapper objectWrapper = new XML.ObjectWrapper(value);
+
+        System.assertEquals('Integer', objectWrapper.getTypeName());
+        System.assertEquals(value, objectWrapper.toInteger());
+    }
+
+    @IsTest
+    private static void typeIntegerNegative()
+    {
+        Integer value = -123456;
+        XML.ObjectWrapper objectWrapper = new XML.ObjectWrapper(value);
+
+        System.assertEquals('Integer', objectWrapper.getTypeName());
+        System.assertEquals(value, objectWrapper.toInteger());
+    }
+
+    @IsTest
+    private static void typeDecimalPositive()
+    {
+        Decimal value = 123.456;
+        XML.ObjectWrapper objectWrapper = new XML.ObjectWrapper(value);
+
+        System.assertEquals('Decimal', objectWrapper.getTypeName());
+        System.assertEquals(value, objectWrapper.toDecimal());
+    }
+
+    @IsTest
+    private static void typeDecimalNegative()
+    {
+        Decimal value = -123.456;
+        XML.ObjectWrapper objectWrapper = new XML.ObjectWrapper(value);
+
+        System.assertEquals('Decimal', objectWrapper.getTypeName());
+        System.assertEquals(value, objectWrapper.toDecimal());
+    }
+
+    @IsTest
+    private static void typeMap()
+    {
+        Map<String, String> value = new Map<String, String>{
+            'key1' => 'val1',
+            'key2' => 'val2'
+        };
+        XML.ObjectWrapper objectWrapper = new XML.ObjectWrapper(value);
+
+        System.assertEquals('Map', objectWrapper.getTypeName());
+        System.assertEquals(value, objectWrapper.toMap());
+    }
+
+    /*
+    ---------------------------------------------
     -- SObject Tests
     ---------------------------------------------
      */
@@ -347,6 +506,33 @@ private class XMLTest {
     }
 
     @IsTest
+    private static void serializeDatetime()
+    {
+        Datetime value = Datetime.newInstance(2022, 01, 01, 1, 2, 3);
+        String xmlString = XML.serialize(value).toString();
+
+        System.assertEquals('<elements>2022-01-01T09:02:03.000Z</elements>', xmlString);
+    }
+
+    @IsTest
+    private static void serializeDate()
+    {
+        Date value = Date.newInstance(2022, 01, 01);
+        String xmlString = XML.serialize(value).toString();
+
+        System.assertEquals('<elements>2022-01-01</elements>', xmlString);
+    }
+
+    @IsTest
+    private static void serializeTime()
+    {
+        Time value = Time.newInstance(13, 1, 2, 3);
+        String xmlString = XML.serialize(value).toString();
+
+        System.assertEquals('<elements>13:01:02.003Z</elements>', xmlString);
+    }
+
+    @IsTest
     private static void serializeEmptyList()
     {
         String xmlString = XML.serialize(new List<String>()).toString();
@@ -488,7 +674,7 @@ private class XMLTest {
     private static void deserializeNull()
     {
         try {
-            Object obj = XML.deserialize(null).toObject();
+            XML.deserialize(null).toObject();
             throw new XmlException('Error not thrown.');
         }
         catch (Exception e) {
@@ -497,10 +683,26 @@ private class XMLTest {
     }
 
     @IsTest
+    private static void deserializeDatetime()
+    {
+        Contact contact = new Contact(
+            FirstName = 'First',
+            LastName = 'Last'
+        );
+        insert contact;
+
+        Contact contactQuery = [SELECT Id, CreatedDate FROM Contact LIMIT 1];
+        Contact contactResult = (Contact) XML.deserialize(XML.serialize(contactQuery).toString()).setType(Contact.class).toObject();
+
+        System.assertEquals(contactQuery.Id, contactResult.Id);
+        System.assertEquals(contactQuery.CreatedDate, contactResult.CreatedDate);
+    }
+
+    @IsTest
     private static void deserializeEmptyString()
     {
         try {
-            Object obj = XML.deserialize('').toObject();
+            XML.deserialize('').toObject();
             throw new XmlException('Error not thrown.');
         }
         catch (Exception e) {
@@ -512,7 +714,7 @@ private class XMLTest {
     private static void deserializeInvalid()
     {
         try {
-            Object obj = XML.deserialize('invalid').toObject();
+            XML.deserialize('invalid').toObject();
             throw new XmlException('Error not thrown.');
         }
         catch (Exception e) {
@@ -562,11 +764,11 @@ private class XMLTest {
     {
         String xmlString = XML.serialize(new List<Object>{
             new Map<String, String>{
-                '{http://example.org}a' => 'b',
-                '{http://example.org}c' => 'd'
+                '{https://example.org}a' => 'b',
+                '{https://example.org}c' => 'd'
             }
-        }).addNamespace('http://example.org', 'b').toString();
-        System.assertEquals('<element xmlns:b="http://example.org"><b:c>d</b:c><b:a>b</b:a></element>', xmlString);
+        }).addNamespace('https://example.org', 'b').toString();
+        System.assertEquals('<element xmlns:b="https://example.org"><b:c>d</b:c><b:a>b</b:a></element>', xmlString);
     }
 
     @IsTest
@@ -574,11 +776,11 @@ private class XMLTest {
     {
         String xmlString = XML.serialize(new List<Object>{
             new Map<String, String>{
-                '{http://example1.org}a' => 'b',
-                '{http://example2.org}c' => 'd'
+                '{https://example1.org}a' => 'b',
+                '{https://example2.org}c' => 'd'
             }
-        }).setNamespaces(new Map<String, String>{'http://example1.org' => 'p1', 'http://example2.org' => 'p2'}).toString();
-        System.assertEquals('<element xmlns:p1="http://example1.org" xmlns:p2="http://example2.org"><p2:c>d</p2:c><p1:a>b</p1:a></element>', xmlString);
+        }).setNamespaces(new Map<String, String>{'https://example1.org' => 'p1', 'https://example2.org' => 'p2'}).toString();
+        System.assertEquals('<element xmlns:p1="https://example1.org" xmlns:p2="https://example2.org"><p2:c>d</p2:c><p1:a>b</p1:a></element>', xmlString);
     }
 
     @IsTest
@@ -586,10 +788,10 @@ private class XMLTest {
     {
         String xmlString = XML.serialize(new List<Object>{
             new Map<String, String>{
-                '{http://example1.org}a' => 'b'
+                '{https://example1.org}a' => 'b'
             }
-        }).setNamespaces(new Map<String, String>{'http://example2.org' => 'p2'}).toString();
-        System.assertEquals('<element xmlns:p2="http://example2.org"><a>b</a></element>', xmlString);
+        }).setNamespaces(new Map<String, String>{'https://example2.org' => 'p2'}).toString();
+        System.assertEquals('<element xmlns:p2="https://example2.org"><a>b</a></element>', xmlString);
     }
 
     @IsTest
@@ -622,10 +824,10 @@ private class XMLTest {
     {
         String xmlString = XML.serialize(new List<Object>{
             new Map<String, String>{
-                '{http://example1.org}a' => 'b',
-                '{http://example2.org}c' => 'd'
+                '{https://example1.org}a' => 'b',
+                '{https://example2.org}c' => 'd'
             }
-        }).setNamespaces(new Map<String, String>{'http://example1.org' => 'p1', 'http://example2.org' => 'p2'}).toString();
+        }).setNamespaces(new Map<String, String>{'https://example1.org' => 'p1', 'https://example2.org' => 'p2'}).toString();
 
         System.assertEquals(new Map<String, Object>{
             'element' => new Map<String, String>{
@@ -640,15 +842,15 @@ private class XMLTest {
     {
         String xmlString = XML.serialize(new List<Object>{
             new Map<String, String>{
-                '{http://example1.org}a' => 'b',
-                '{http://example2.org}c' => 'd'
+                '{https://example1.org}a' => 'b',
+                '{https://example2.org}c' => 'd'
             }
-        }).setNamespaces(new Map<String, String>{'http://example1.org' => 'p1', 'http://example2.org' => 'p2'}).toString();
+        }).setNamespaces(new Map<String, String>{'https://example1.org' => 'p1', 'https://example2.org' => 'p2'}).toString();
 
         System.assertEquals(new Map<String, Object>{
             'element' => new Map<String, String>{
-                '{http://example1.org}a' => 'b',
-                '{http://example2.org}c' => 'd'
+                '{https://example1.org}a' => 'b',
+                '{https://example2.org}c' => 'd'
             }
         }, XML.deserialize(xmlString).showNamespaces().toObject());
     }
@@ -658,18 +860,18 @@ private class XMLTest {
     {
         String xmlString = XML.serialize(new List<Object>{
             new Map<String, String>{
-                '{http://example1.org}a' => 'b',
-                '{http://example2.org}c' => 'd',
+                '{https://example1.org}a' => 'b',
+                '{https://example2.org}c' => 'd',
                 'e' => 'f'
             }
-        }).setNamespaces(new Map<String, String>{'http://example1.org' => 'p1', 'http://example2.org' => 'p2'}).toString();
+        }).setNamespaces(new Map<String, String>{'https://example1.org' => 'p1', 'https://example2.org' => 'p2'}).toString();
 
         System.assertEquals(new Map<String, Object>{
             'element' => new Map<String, String>{
-                '{http://example1.org}a' => 'b',
+                '{https://example1.org}a' => 'b',
                 'e' => 'f'
             }
-        }, XML.deserialize(xmlString).filterNamespace('http://example1.org').toObject());
+        }, XML.deserialize(xmlString).filterNamespace('https://example1.org').toObject());
     }
 
     @IsTest
@@ -888,6 +1090,18 @@ private class XMLTest {
 
         String xmlString = XML.serialize(book).setRootTag('book').embedAttributes().toString();
         System.assertEquals('<book key2="value2" key1="value1"><title>title</title></book>', xmlString);
+    }
+
+    @IsTest
+    public static void serializeObjectAttributesNone()
+    {
+        BookWithStringAttributes book = new BookWithStringAttributes();
+        book.attributes.put('key1', 'value1');
+        book.attributes.put('key2', 'value2');
+        book.title = 'title';
+
+        String xmlString = XML.serialize(book).setRootTag('book').splitAttributes().toString();
+        System.assertEquals('<book><title>title</title><attributes><key2>value2</key2><key1>value1</key1></attributes></book>', xmlString);
     }
 
     @IsTest

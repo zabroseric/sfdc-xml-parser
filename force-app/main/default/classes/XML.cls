@@ -89,7 +89,7 @@ public class XML {
         private String elementTag = DEFAULT_ELEMENT_TAG;
         private Boolean showEncoding = false;
         private Map<String, String> rootAttributes = new Map<String, String>();
-        private Map<String, String> namespaces = new Map<String, String>();
+        private final Map<String, String> namespaces = new Map<String, String>();
         private Boolean detectRootTag = true;
         private Boolean beautify = false;
         private Boolean embedAttributes = false;
@@ -311,7 +311,7 @@ public class XML {
          */
         public Writer splitAttributes()
         {
-            this.embedAttributes = true;
+            this.embedAttributes = false;
             return this;
         }
 
@@ -396,7 +396,7 @@ public class XML {
 
             // Otherwise if we have primitive type, parse this.
             else if ( !(obj.isEmpty() && suppressNulls) ) {
-                xmlNode.addTextNode(obj.toString());
+                xmlNode.addTextNode(parsePrimitive(obj));
             }
 
             // Set the attributes on the root node.
@@ -420,6 +420,25 @@ public class XML {
         }
 
         /**
+         * Provides a way to intercept the parsing of any primitive types and overwrite it.
+         *
+         * @param value
+         *
+         * @return
+         */
+        private String parsePrimitive(ObjectWrapper value)
+        {
+            switch on value.getTypeName() {
+                when 'Datetime' {
+                    return value.toDatetime().formatGmt('yyyy-MM-dd\'T\'HH:mm:ss.SSS') + 'Z';
+                }
+                when else {
+                    return value.toString();
+                }
+            }
+        }
+
+        /**
          * Parse a map for iteration, if we have chosen to empty nodes
          * and the resulting node from children are empty, remove them.
          *
@@ -428,7 +447,7 @@ public class XML {
          *
          * @return
          */
-        private Boolean parseMap(Map<String, Object> values, DOM.XmlNode xmlNode)
+        private Boolean parseMap(Map<String, Object> values, Dom.XmlNode xmlNode)
         {
             Boolean isEmptyChild = parseMulti(new List<String>(values.keySet()), values.values(), xmlNode);
             if ( isEmptyChild && xmlNode.getParent() != null ) { xmlNode.getParent().removeChild(xmlNode); }
@@ -445,7 +464,7 @@ public class XML {
          *
          * @return
          */
-        private Boolean parseList(List<Object> values, String key, DOM.XmlNode xmlNode)
+        private Boolean parseList(List<Object> values, String key, Dom.XmlNode xmlNode)
         {
             Boolean isEmptyChild = parseMulti(new List<String>{key}, values, xmlNode);
             if ( isEmptyChild && xmlNode.getParent() != null ) { xmlNode.getParent().removeChild(xmlNode); }
@@ -462,7 +481,7 @@ public class XML {
          *
          * @return
          */
-        private Boolean parseMulti(List<String> keys, List<Object> values, DOM.XmlNode xmlNode)
+        private Boolean parseMulti(List<String> keys, List<Object> values, Dom.XmlNode xmlNode)
         {
             Integer notEmptyNumber = 0;
 
@@ -505,14 +524,14 @@ public class XML {
                     notEmptyNumber += parseMap(obj.toMap(), childNode) ? 0 : 1;
                 }
                 else if ( !obj.isEmpty() && key == 'self' && xmlNode.getChildren().isEmpty() ) {
-                    childNode = xmlNode.addTextNode(obj.toString());
+                    childNode = xmlNode.addTextNode(parsePrimitive(obj));
                     notEmptyNumber += 1;
                 }
                 // If we have a value don't iterate and just add the node.
                 else if ( !obj.isEmpty() ) {
                     childNode = xmlNode
                         .addChildElement(key, null, null)
-                        .addTextNode(obj.toString());
+                        .addTextNode(parsePrimitive(obj));
                     notEmptyNumber += 1;
                 }
 
@@ -994,9 +1013,10 @@ public class XML {
      * object such as converting the type, detecting the type of object and sanitization.
      * ===============================================================================
      */
+    @TestVisible
     private class ObjectWrapper {
 
-        private Object obj;
+        private final Object obj;
 
         /**
          * Parse the object for serialization.
@@ -1114,6 +1134,18 @@ public class XML {
         }
 
         /**
+         * Returns if the object we have is empty regardless of its type.
+         *
+         * @return
+         */
+        public Boolean isEmpty()
+        {
+            if ( obj instanceof Map<String, Object> ) { return ((Map<String, Object>) obj).isEmpty(); }
+            if ( obj instanceof List<Object> ) { return ((List<Object>) obj).isEmpty(); }
+            return obj == null || obj == '';
+        }
+
+        /**
          * Converts the current object to a list.
          *
          * @return
@@ -1164,18 +1196,6 @@ public class XML {
         }
 
         /**
-         * Returns if the object we have is empty regardless of its type.
-         *
-         * @return
-         */
-        public Boolean isEmpty()
-        {
-            if ( obj instanceof Map<String, Object> ) { return ((Map<String, Object>) obj).isEmpty(); }
-            if ( obj instanceof List<Object> ) { return ((List<Object>) obj).isEmpty(); }
-            return obj == null || obj == '';
-        }
-
-        /**
          * Converts the object to a string value.
          *
          * @return
@@ -1187,6 +1207,76 @@ public class XML {
         }
 
         /**
+         * Converts the object to a datetime value.
+         *
+         * @return
+         */
+        public Datetime toDatetime()
+        {
+            return (Datetime) JSON.deserialize('"' + toString().replace(' ', 'T') + '"', Datetime.class);
+        }
+
+        /**
+         * Converts the object to a time value.
+         *
+         * @return
+         */
+        public Time toTime()
+        {
+            return (Time) JSON.deserialize('"' + toString() + '"', Time.class);
+        }
+
+        /**
+         * Converts the object to a date value.
+         *
+         * @return
+         */
+        public Date toDate()
+        {
+            return (Date) JSON.deserialize('"' + toString().replace('00:00:00', '').trim() + '"', Date.class);
+        }
+
+        /**
+         * Converts the object to a boolean value.
+         *
+         * @return
+         */
+        public Boolean toBoolean()
+        {
+            return obj.toString() == 'true';
+        }
+
+        /**
+         * Converts the object to a id value.
+         *
+         * @return
+         */
+        public Id toId()
+        {
+            return Id.valueOf(toString());
+        }
+
+        /**
+         * Converts the object to a decimal value.
+         *
+         * @return
+         */
+        public Decimal toDecimal()
+        {
+            return Decimal.valueOf(toString());
+        }
+
+        /**
+         * Converts the object to a integer value.
+         *
+         * @return
+         */
+        public Integer toInteger()
+        {
+            return Integer.valueOf(toString());
+        }
+
+        /**
          * Converts the object to an untyped objected.
          *
          * @return
@@ -1194,6 +1284,62 @@ public class XML {
         public ObjectWrapper toUntyped()
         {
             return new ObjectWrapper(JSON.deserializeUntyped(JSON.serialize(obj, false)));
+        }
+
+        /**
+         * Gets the type of an object by looking at the structure of object and string.
+         * The purpose of this detection, is due to the conversion of everything to a XML object, and converting primitive types to a string.
+         *
+         * Note: This does not detect the following types:
+         * - Blob
+         * - Long (set as integer)
+         * - Double (set as integer / decimal depending on presence of decimal places)
+         *
+         * @return
+         */
+        public String getTypeName()
+        {
+            ObjectWrapper objUntyped = toUntyped();
+
+            // Cannot detect type from null.
+            if (obj == null) {
+                return 'Null';
+            }
+
+            String objString = objUntyped.toString();
+
+            // Any primitive types.
+            if (String.isBlank(objString.replaceFirst('true|false', ''))) {
+                return 'Boolean';
+            }
+            if(String.isBlank(objString.replaceFirst('[0-9]{4}-[0-9]{2}-[0-9]{2}', ''))) {
+                return 'Date';
+            }
+            if (String.isBlank(objString.replaceFirst('[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}((\\+[0-9]{4})|Z)', ''))) {
+                return 'Datetime';
+            }
+            if (String.isBlank(objString.replaceFirst('[0-9A-Za-z]{18}|[0-9A-Za-z]{15}', ''))) {
+                return 'Id';
+            }
+            if (String.isBlank(objString.replaceFirst('[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}Z', ''))) {
+                return 'Time';
+            }
+            if (String.isBlank(objString.replaceFirst('-?[0-9]+', ''))) {
+                return 'Integer';
+            }
+            if (String.isBlank(objString.replaceFirst('-?[0-9]+\\.[0-9]+', ''))) {
+                return 'Decimal';
+            }
+
+            // Types we can detect.
+            if (obj instanceof Map<String, Object>) {
+                return 'Map';
+            }
+            if (obj instanceof List<Object>) {
+                return 'List';
+            }
+
+            return 'String';
         }
     }
 }
