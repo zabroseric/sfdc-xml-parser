@@ -37,9 +37,9 @@ public class XML {
      * Initialises the writer class and exposes the methods provided
      * for serialization of an object.
      *
-     * @param obj
+     * @param obj Any object that is needing to be serialized
      *
-     * @return
+     * @return An internal Writer class that provides access to additional functionality via method chaining
      */
     public static Writer serialize(Object obj)
     {
@@ -50,9 +50,9 @@ public class XML {
      * Initialises the reader class and exposes the methods provided
      * for deserialization of a string.
      *
-     * @param xmlString
+     * @param xmlString An xml string that is needing to be deserialized
      *
-     * @return
+     * @return An internal Reader class that provides access to additional functionality via method chaining
      */
     public static Reader deserialize(String xmlString)
     {
@@ -65,10 +65,10 @@ public class XML {
      *
      * The output will be casted to the apex type / class provided.
      *
-     * @param xmlString
-     * @param apexType
+     * @param xmlString An xml string that is needing to be deserialized
+     * @param apexType The type of object that the deserialization will be cast as
      *
-     * @return
+     * @return An internal Reader class that provides access to additional functionality via method chaining
      */
     public static Reader deserialize(String xmlString, Type apexType)
     {
@@ -101,9 +101,9 @@ public class XML {
         /**
          * Pass the object for serialization.
          *
-         * @param obj
+         * @param obj Any object that is needing to be serialized
          *
-         * @return
+         * @return An internal Writer class that provides access to additional functionality via method chaining
          */
         public Writer write(Object obj)
         {
@@ -114,7 +114,7 @@ public class XML {
         /**
          * Converts the object to a string.
          *
-         * @return
+         * @return An internal Writer class that provides access to additional functionality via method chaining
          */
         public override String toString()
         {
@@ -143,7 +143,7 @@ public class XML {
         /**
          * Converts the object to a base 64 encoded string.
          *
-         * @return
+         * @return An internal Writer class that provides access to additional functionality via method chaining
          */
         public String toBase64()
         {
@@ -153,7 +153,7 @@ public class XML {
         /**
          * Debugs the resulting xml string.
          *
-         * @return
+         * @return An internal Writer class that provides access to additional functionality via method chaining
          */
         public Writer debug()
         {
@@ -164,7 +164,7 @@ public class XML {
         /**
          * Ensure any nulls values are omitted in the resulting xml string.
          *
-         * @return
+         * @return An internal Writer class that provides access to additional functionality via method chaining
          */
         public Writer suppressNulls()
         {
@@ -175,7 +175,7 @@ public class XML {
         /**
          * Ensure any nulls values are kept in the resulting xml string.
          *
-         * @return
+         * @return An internal Writer class that provides access to additional functionality via method chaining
          */
         public Writer showNulls()
         {
@@ -186,7 +186,7 @@ public class XML {
         /**
          * Sets the output to be in a nicely formatted string.
          *
-         * @return
+         * @return An internal Writer class that provides access to additional functionality via method chaining
          */
         public Writer beautify()
         {
@@ -197,7 +197,7 @@ public class XML {
         /**
          * Sets the output to be in a minified string.
          *
-         * @return
+         * @return An internal Writer class that provides access to additional functionality via method chaining
          */
         public Writer minify()
         {
@@ -208,7 +208,7 @@ public class XML {
         /**
          * Shows xml encoding at the beginning of the xml.
          *
-         * @return
+         * @return An internal Writer class that provides access to additional functionality via method chaining
          */
         public Writer showEncoding()
         {
@@ -219,7 +219,7 @@ public class XML {
         /**
          * Hides xml encoding at the beginning of the xml.
          *
-         * @return
+         * @return An internal Writer class that provides access to additional functionality via method chaining
          */
         public Writer hideEncoding()
         {
@@ -230,10 +230,10 @@ public class XML {
         /**
          * Sets an attribute on the root node.
          *
-         * @param key
-         * @param value
+         * @param key The attribute key
+         * @param value The attribute value that is placed in quotes
          *
-         * @return
+         * @return An internal Writer class that provides access to additional functionality via method chaining
          */
         public Writer addRootAttribute(String key, String value)
         {
@@ -244,9 +244,9 @@ public class XML {
         /**
          * Sets attributes on the root node.
          *
-         * @param rootAttributes
+         * @param rootAttributes A map of attributes with key, value pairs
          *
-         * @return
+         * @return An internal Writer class that provides access to additional functionality via method chaining
          */
         public Writer setRootAttributes(Map<String, String> rootAttributes)
         {
@@ -257,10 +257,10 @@ public class XML {
         /**
          * Sets a namespace to be used.
          *
-         * @param uri
-         * @param prefix
+         * @param uri The namespace uri that will be set in the root tag
+         * @param prefix The prefix set on all tags that mention the uri
          *
-         * @return
+         * @return An internal Writer class that provides access to additional functionality via method chaining
          */
         public Writer addNamespace(String uri, String prefix)
         {
@@ -272,9 +272,9 @@ public class XML {
         /**
          * Sets namespace to be used.
          *
-         * @param namespaces
+         * @param namespaces A map of namespaces with uri, prefix pairs
          *
-         * @return
+         * @return An internal Writer class that provides access to additional functionality via method chaining
          */
         public Writer setNamespaces(Map<String, String> namespaces)
         {
@@ -288,9 +288,9 @@ public class XML {
          * Sets the root tag for the XML.
          * Note: Setting this will disable the automatic detection of the objects.
          *
-         * @param rootTag
+         * @param rootTag The name of the root tag that will be set
          *
-         * @return
+         * @return An internal Writer class that provides access to additional functionality via method chaining
          */
         public Writer setRootTag(String rootTag)
         {
@@ -301,6 +301,8 @@ public class XML {
 
         /**
          * Sets any attributes tags to be serialized into the tag.
+         *
+         * @return An internal Writer class that provides access to additional functionality via method chaining
          */
         public Writer embedAttributes()
         {
@@ -310,6 +312,8 @@ public class XML {
 
         /**
          * Sets any attributes tags to be serialized into a separate child tag.
+         *
+         * @return An internal Writer class that provides access to additional functionality via method chaining
          */
         public Writer splitAttributes()
         {
@@ -320,9 +324,9 @@ public class XML {
         /**
          * Formats the xml string.
          *
-         * @param xmlString
+         * @param xmlString An xml encoded string
          *
-         * @return
+         * @return A formatted version of the xml encoded string
          */
         private String formatString(String xmlString)
         {
@@ -355,11 +359,7 @@ public class XML {
         /**
          * The entry point for the write toString method.
          *
-         * @param rootTag
-         * @param elementTag
-         * @param suppressNulls
-         *
-         * @return
+         * @return An XML Document representing the settings and object that was provided
          */
         private Dom.Document parse()
         {
@@ -421,9 +421,9 @@ public class XML {
         /**
          * Provides a way to intercept the parsing of any primitive types and overwrite it.
          *
-         * @param value
+         * @param value An object wrapper containing the primitive type
          *
-         * @return
+         * @return An evaluated string value from the object wrapper
          */
         private String parsePrimitive(ObjectWrapper value)
         {
@@ -441,10 +441,10 @@ public class XML {
          * Parse a map for iteration, if we have chosen to empty nodes
          * and the resulting node from children are empty, remove them.
          *
-         * @param values
-         * @param xmlNode
+         * @param values Key value pairs from the object that was parsed
+         * @param xmlNode The existing XML document that has so far been created
          *
-         * @return
+         * @return A boolean if the map is empty
          */
         private Boolean parseMap(Map<String, Object> values, Dom.XmlNode xmlNode)
         {
@@ -459,11 +459,11 @@ public class XML {
          * Parse a list for iteration, if we have chosen to empty nodes
          * and the resulting node from children are empty, remove them.
          *
-         * @param values
-         * @param key
-         * @param xmlNode
+         * @param values Values from the object that was parsed
+         * @param key A key from which the object was set
+         * @param xmlNode The existing XML document that has so far been created
          *
-         * @return
+         * @return A boolean if the list is empty
          */
         private Boolean parseList(List<Object> values, String key, Dom.XmlNode xmlNode)
         {
@@ -480,11 +480,11 @@ public class XML {
          * Parse any type for iteration, this will iterate over the other parsing
          * methods for each of the nested elements.
          *
-         * @param keys
-         * @param values
-         * @param xmlNode
+         * @param keys Keys from the object that was parsed
+         * @param values Values from the object that was parsed
+         * @param xmlNode The existing XML document that has so far been created
          *
-         * @return
+         * @return A boolean if the list is empty
          */
         private Boolean parseMulti(List<String> keys, List<Object> values, Dom.XmlNode xmlNode)
         {
@@ -559,9 +559,9 @@ public class XML {
         /**
          * Replaces the tag name with the required prefix.
          *
-         * @param tagName
+         * @param tagName The original name of the tag
          *
-         * @return
+         * @return A string of the new tag name after considering the namespaces
          */
         private String setNamespace(String tagName)
         {
@@ -602,9 +602,9 @@ public class XML {
         /**
          * Pass the xml string for deserialization.
          *
-         * @param xmlString
+         * @param xmlString An XML encoded string
          *
-         * @return
+         * @return An internal Reader class that provides access to additional functionality via method chaining
          */
         public Reader read(String xmlString)
         {
@@ -616,7 +616,7 @@ public class XML {
         /**
          * Converts the xml string to an Object.
          *
-         * @return
+         * @return An internal Reader class that provides access to additional functionality via method chaining
          */
         public Object toObject()
         {
@@ -635,7 +635,7 @@ public class XML {
         /**
          * Converts the xml string to an Object.
          *
-         * @return
+         * @return An internal Reader class that provides access to additional functionality via method chaining
          */
         private Object toObjectInternal()
         {
@@ -682,7 +682,7 @@ public class XML {
         /**
          * Converts the xml string to an Object and return this as a string.
          *
-         * @return
+         * @return An internal Reader class that provides access to additional functionality via method chaining
          */
         public override String toString()
         {
@@ -692,7 +692,7 @@ public class XML {
         /**
          * Converts the xml string to an Object and debug it.
          *
-         * @return
+         * @return An internal Reader class that provides access to additional functionality via method chaining
          */
         public Reader debug()
         {
@@ -704,9 +704,9 @@ public class XML {
          * When one of the tags contains a reserved word, this tag will be renamed and a suffix
          * added so that it can be correctly managed.
          *
-         * @param reservedWordSuffix
+         * @param reservedWordSuffix A suffix string
          *
-         * @return
+         * @return An internal Reader class that provides access to additional functionality via method chaining
          */
         public Reader setReservedWordSuffix(String reservedWordSuffix)
         {
@@ -719,9 +719,9 @@ public class XML {
          * Set the type of object the xml string will be converted to.
          * If not provided, the object will be untyped.
          *
-         * @param apexType
+         * @param apexType Any object that we want converted to
          *
-         * @return
+         * @return An internal Reader class that provides access to additional functionality via method chaining
          */
         public Reader setType(Type apexType)
         {
@@ -741,9 +741,9 @@ public class XML {
          * Set xml nodes that should be treated as an array, even
          * if they have not been explicitly detected as an array.
          *
-         * @param arrayNodes
+         * @param arrayNodes A set of tag names
          *
-         * @return
+         * @return An internal Reader class that provides access to additional functionality via method chaining
          */
         public Reader setArrayNodes(Set<String> arrayNodes)
         {
@@ -755,9 +755,9 @@ public class XML {
          * Set an xml node that should be treated as an array, even
          * if they have not been explicitly detected as an array.
          *
-         * @param node
+         * @param node A string containing one tag name
          *
-         * @return
+         * @return An internal Reader class that provides access to additional functionality via method chaining
          */
         public Reader addArrayNode(String node)
         {
@@ -769,9 +769,9 @@ public class XML {
          * Filter the namespaces so that either namespaces that are empty
          * or that do not have a namespace are returned.
          *
-         * @param filterNamespace
+         * @param filterNamespace A string value of the namespace
          *
-         * @return
+         * @return An internal Reader class that provides access to additional functionality via method chaining
          */
         public Reader filterNamespace(String filterNamespace)
         {
@@ -782,7 +782,7 @@ public class XML {
         /**
          * Shows namespaces as clark notations.
          *
-         * @return
+         * @return An internal Reader class that provides access to additional functionality via method chaining
          */
         public Reader showNamespaces()
         {
@@ -793,7 +793,7 @@ public class XML {
         /**
          * Hide namespaces and show only the tag name.
          *
-         * @return
+         * @return An internal Reader class that provides access to additional functionality via method chaining
          */
         public Reader hideNamespaces()
         {
@@ -804,7 +804,7 @@ public class XML {
         /**
          * Entry points for the reader toObject method.
          *
-         * @return
+         * @return The resulting map from parsing an XML object
          */
         private Map<String, Object> parse()
         {
@@ -817,10 +817,10 @@ public class XML {
          * Uses to iterate over the current reader pointer and recursively call
          * itself as we go down the DOM tree.
          *
-         * @param reader
-         * @param elementName
+         * @param reader The existing xml reader class and current position
+         * @param elementName The current element that is being read
          *
-         * @return
+         * @return The resulting object that has been parsed
          */
         private Object parseNested(XmlStreamReader reader, String elementName)
         {
@@ -929,10 +929,10 @@ public class XML {
         /**
          * Determines if the key is contained within the map via a case-insensitive comparison.
          *
-         * @param objs
-         * @param key
+         * @param objs A map of objects being searched
+         * @param key The search value
          *
-         * @return
+         * @return A boolean if the value has been found
          */
         public Boolean containsCaseInsensitive(Map<String, Object> objs, String key)
         {
@@ -942,10 +942,10 @@ public class XML {
         /**
          * Returns the object of a map via a key that is insensitive.
          *
-         * @param objs
-         * @param key
+         * @param objs A map of objects being searched
+         * @param key The search value
          *
-         * @return
+         * @return The object that has been found, otherwise null will be returned
          */
         public Object getObjCaseInsensitive(Map<String, Object> objs, String key)
         {
@@ -955,10 +955,10 @@ public class XML {
         /**
          * Returns the key of a map via a key that is insensitive.
          *
-         * @param objs
-         * @param key
+         * @param objs A map of objects being searched
+         * @param key The search value
          *
-         * @return
+         * @return The key of the object that has been found, otherwise null will be returned
          */
         public String getKeyCaseInsensitive(Map<String, Object> objs, String key)
         {
@@ -969,9 +969,9 @@ public class XML {
          * Returns a key set map in the following format.
          * key lower case => key
          *
-         * @param objs
+         * @param objs A map of objects being searched
          *
-         * @return
+         * @return The map that has been parsed with keys lowercase
          */
         public Map<String, String> getKeySetCaseMap(Map<String, Object> objs)
         {
@@ -988,10 +988,10 @@ public class XML {
          * - {Reservedword}
          * - {reservedword}
          *
-         * @param str
-         * @param suffix
+         * @param str An xml encoded string
+         * @param suffix A string that will be added to the end of the tags
          *
-         * @return
+         * @return An xml encoded string with reserved words replaced
          */
         public String replaceXMLReservedWords(String str, String suffix)
         {
@@ -1007,9 +1007,9 @@ public class XML {
         /**
          * Capitalizes the first letter of each word.
          *
-         * @param str
+         * @param str A standard string with words
          *
-         * @return
+         * @return The string of words in title case
          */
         public String toUCWords(String str)
         {
@@ -1035,9 +1035,7 @@ public class XML {
         /**
          * Parse the object for serialization.
          *
-         * @param obj
-         *
-         * @return
+         * @param obj The original object that we want wrapped
          */
         public ObjectWrapper(Object obj)
         {
@@ -1050,7 +1048,7 @@ public class XML {
          *  key => value
          *  key => value
          *
-         * @return
+         * @return A boolean if the map has an attributes key
          */
         public Boolean hasAttributes()
         {
@@ -1063,7 +1061,7 @@ public class XML {
          *  key => value
          *  key => value
          *
-         * @return
+         * @return A map of all attributes
          */
         public Map<String, Object> getAttributes()
         {
@@ -1081,7 +1079,7 @@ public class XML {
         /**
          * Returns if the current object is a list.
          *
-         * @return
+         * @return A boolean if the object is a list
          */
         public Boolean instanceOfList()
         {
@@ -1091,7 +1089,7 @@ public class XML {
         /**
          * Returns if the current object is a map.
          *
-         * @return
+         * @return A boolean if the object is a map
          */
         public Boolean instanceOfMap()
         {
@@ -1101,7 +1099,7 @@ public class XML {
         /**
          * Returns if the current object is a sobject list.
          *
-         * @return
+         * @return A boolean if the object is a list of sobjects
          */
         public Boolean instanceOfSObjectList()
         {
@@ -1111,7 +1109,7 @@ public class XML {
         /**
          * Returns if the current object is a sobject map.
          *
-         * @return
+         * @return A boolean if the object is a map
          */
         public Boolean instanceOfSObjectMap()
         {
@@ -1121,7 +1119,7 @@ public class XML {
         /**
          * Returns if the current object is an sobject.
          *
-         * @return
+         * @return A boolean if the object is an sobject
          */
         public Boolean instanceOfSObject()
         {
@@ -1129,10 +1127,10 @@ public class XML {
         }
 
         /**
-         * If an SObject list, map, single object have been detected this can be used
+         * If an sobject list, map, single sobject have been detected this can be used
          * to return the describe of this so we can get its name and other details.
          *
-         * @return
+         * @return A describe of the sobject
          */
         public DescribeSObjectResult getSObjectDescribe()
         {
@@ -1148,7 +1146,7 @@ public class XML {
         /**
          * Returns if the object we have is empty regardless of its type.
          *
-         * @return
+         * @return A boolean of if the object is empty
          */
         public Boolean isEmpty()
         {
@@ -1164,7 +1162,7 @@ public class XML {
         /**
          * Converts the current object to a list.
          *
-         * @return
+         * @return The object cast as a map
          */
         public Map<String, Object> toMap()
         {
@@ -1172,9 +1170,9 @@ public class XML {
         }
 
         /**
-         * Converts the current object to a map.
+         * Converts the current object to a list.
          *
-         * @return
+         * @return The object cast as a list
          */
         public List<Object> toList()
         {
@@ -1182,9 +1180,9 @@ public class XML {
         }
 
         /**
-         * Converts the current object to a sobject list.
+         * Converts the current object to an sobject map.
          *
-         * @return
+         * @return The object cast as an sobject map
          */
         public Map<Id, SObject> toSObjectMap()
         {
@@ -1192,9 +1190,9 @@ public class XML {
         }
 
         /**
-         * Converts the current object to a sobject map.
+         * Converts the current object to a sobject list.
          *
-         * @return
+         * @return The object cast as an sobject list
          */
         public List<SObject> toSObjectList()
         {
@@ -1204,7 +1202,7 @@ public class XML {
         /**
          * Converts the current to an sobject.
          *
-         * @return
+         * @return The object cast as an sobject
          */
         public SObject toSObject()
         {
@@ -1214,7 +1212,7 @@ public class XML {
         /**
          * Converts the object to a string value.
          *
-         * @return
+         * @return The object cast as a string
          */
         public override String toString()
         {
@@ -1227,7 +1225,7 @@ public class XML {
         /**
          * Converts the object to a datetime value.
          *
-         * @return
+         * @return The object cast as a datetime
          */
         public Datetime toDatetime()
         {
@@ -1237,7 +1235,7 @@ public class XML {
         /**
          * Converts the object to a time value.
          *
-         * @return
+         * @return The object cast as a time
          */
         public Time toTime()
         {
@@ -1247,7 +1245,7 @@ public class XML {
         /**
          * Converts the object to a date value.
          *
-         * @return
+         * @return The object cast as a date
          */
         public Date toDate()
         {
@@ -1257,7 +1255,7 @@ public class XML {
         /**
          * Converts the object to a boolean value.
          *
-         * @return
+         * @return The object cast as a boolean
          */
         public Boolean toBoolean()
         {
@@ -1267,7 +1265,7 @@ public class XML {
         /**
          * Converts the object to a id value.
          *
-         * @return
+         * @return The object cast as an id
          */
         public Id toId()
         {
@@ -1277,7 +1275,7 @@ public class XML {
         /**
          * Converts the object to a decimal value.
          *
-         * @return
+         * @return The object cast as a decimal
          */
         public Decimal toDecimal()
         {
@@ -1287,7 +1285,7 @@ public class XML {
         /**
          * Converts the object to a integer value.
          *
-         * @return
+         * @return The object cast as a integer
          */
         public Integer toInteger()
         {
@@ -1297,7 +1295,7 @@ public class XML {
         /**
          * Converts the object to an untyped objected.
          *
-         * @return
+         * @return The ObjectWrapper class
          */
         public ObjectWrapper toUntyped()
         {
@@ -1313,7 +1311,7 @@ public class XML {
          * - Long (set as integer)
          * - Double (set as integer / decimal depending on presence of decimal places)
          *
-         * @return
+         * @return A string of the typename
          */
         public String getTypeName()
         {

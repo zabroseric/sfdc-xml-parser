@@ -826,7 +826,7 @@ String xmlString = XML.serialize(new Map<String, String>{
 
 ## Limitations
 
-Unfortunately, Apex does not support class reflection. This limits the ability to abstract and support additional functionality that would otherwise be possible in other languages. However, as updates are being made the time, the library will be updated accordingly.
+Unfortunately, Apex does not fully support class reflection. This limits the ability to abstract and support additional functionality that would otherwise be possible in other languages. However, as updates are being made the time, the library will be updated accordingly.
 
 ## Contributing
 
