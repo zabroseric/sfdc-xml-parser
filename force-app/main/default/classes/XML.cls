@@ -727,13 +727,11 @@ public class XML {
         {
             this.apexType = apexType;
 
-
-            // If the apex type is a partial key with the map use that, this is useful for nested classes.
-            if (apexType != null && apexType.getName().contains('.')) {
-                apexTypeName = apexType.getName().substringAfter('.');
-            } else if (apexType != null) {
+            if (apexType != null) {//fixes cases with namespace namespace.class.innerclass
                 apexTypeName = apexType.getName();
+                if (apexTypeName.contains('.')) apexTypeName = apexTypeName.substringAfterLast('.');
             }
+
             return this;
         }
 
