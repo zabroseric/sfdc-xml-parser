@@ -252,7 +252,7 @@ private class XMLTest {
 
         String xmlString = XML.serialize(contacts).toString();
         String contactLabel = Contact.getSObjectType().getDescribe().label;
-        String contactsLabel = Contact.getSObjectType().getDescribe().labelplural;
+        String contactsLabel = Contact.getSObjectType().getDescribe().labelPlural;
         System.assertEquals('<{contactsLabel}><{contactLabel}><attributes><type>Contact</type></attributes><FirstName>First1</FirstName><LastName>Last1</LastName></{contactLabel}><{contactLabel}><attributes><type>Contact</type></attributes><FirstName>First2</FirstName><LastName>Last2</LastName></{contactLabel}></{contactsLabel}>'.replaceAll('\\{contactsLabel\\}', contactsLabel).replaceAll('\\{contactLabel\\}', contactLabel), xmlString);
     }
 
@@ -290,7 +290,7 @@ private class XMLTest {
 
         String xmlString = XML.serialize(contacts).addRootAttribute('key1', 'value1').addRootAttribute('key2', 'value2').toString();
         String contactLabel = Contact.getSObjectType().getDescribe().label;
-        String contactsLabel = Contact.getSObjectType().getDescribe().labelplural;
+        String contactsLabel = Contact.getSObjectType().getDescribe().labelPlural;
         System.assertEquals('<{contactsLabel}><{contactLabel}><attributes><type>Contact</type></attributes><FirstName>First1</FirstName><LastName>Last1</LastName></{contactLabel}><{contactLabel}><attributes><type>Contact</type></attributes><FirstName>First2</FirstName><LastName>Last2</LastName></{contactLabel}><attributes><key1>value1</key1><key2>value2</key2></attributes></{contactsLabel}>'.replaceAll('\\{contactsLabel\\}', contactsLabel).replaceAll('\\{contactLabel\\}', contactLabel), xmlString);
     }
 
@@ -312,7 +312,7 @@ private class XMLTest {
         Id contactId2 = contacts.get(0).Id;
 
         String xmlString = XML.serialize(new Map<Id, Contact>(contacts)).toString();
-        String contactsLabel = Contact.getSObjectType().getDescribe().labelplural;
+        String contactsLabel = Contact.getSObjectType().getDescribe().labelPlural;
         System.assertEquals(('<{contactsLabel}><_' + contactId1 + '><attributes><type>Contact</type><url>/services/data//sobjects/Contact/' + contactId1 + '</url></attributes><FirstName>First2</FirstName><LastName>Last2</LastName><Id>' + contactId1 + '</Id></_' + contactId1 + '><_' + contactId2 + '><attributes><type>Contact</type><url>/services/data//sobjects/Contact/' + contactId2 + '</url></attributes><FirstName>First1</FirstName><LastName>Last1</LastName><Id>' + contactId2 + '</Id></_' + contactId2 + '></{contactsLabel}>').replaceAll('\\{contactsLabel\\}', contactsLabel), xmlString.replaceAll('v[0-9]{2}\\.[0-9]', ''));
     }
 
@@ -336,7 +336,7 @@ private class XMLTest {
         };
 
         String xmlString = XML.serialize(new Map<Id, Contact>(contacts)).toString();
-        String contactsLabel = Contact.getSObjectType().getDescribe().labelplural;
+        String contactsLabel = Contact.getSObjectType().getDescribe().labelPlural;
         System.assertEquals(('<{contactsLabel}><_' + contactId1 + '><attributes><type>Contact</type><url>/services/data//sobjects/Contact/' + contactId1 + '</url></attributes><FirstName>First2</FirstName><LastName>Last2</LastName><Id>' + contactId1 + '</Id></_' + contactId1 + '><_' + contactId2 + '><attributes><type>Contact</type><url>/services/data//sobjects/Contact/' + contactId2 + '</url></attributes><FirstName>First1</FirstName><LastName>Last1</LastName><Id>' + contactId2 + '</Id></_' + contactId2 + '></{contactsLabel}>').replaceAll('\\{contactsLabel\\}', contactsLabel), xmlString.replaceAll('v[0-9]{2}\\.[0-9]', ''));
     }
 
@@ -386,7 +386,7 @@ private class XMLTest {
 
         String xmlString = XML.serialize(contacts).embedAttributes().toString();
         String contactLabel = Contact.getSObjectType().getDescribe().label;
-        String contactsLabel = Contact.getSObjectType().getDescribe().labelplural;
+        String contactsLabel = Contact.getSObjectType().getDescribe().labelPlural;
         System.assertEquals(('<{contactsLabel}><{contactLabel} type="Contact" url="/services/data//sobjects/Contact/' + contactId1 + '"><FirstName>First1</FirstName><LastName>Last1</LastName><Id>' + contactId1 + '</Id></{contactLabel}><{contactLabel} type="Contact" url="/services/data//sobjects/Contact/' + contactId2 + '"><FirstName>First2</FirstName><LastName>Last2</LastName><Id>' + contactId2 + '</Id></{contactLabel}></{contactsLabel}>').replaceAll('\\{contactLabel\\}', contactLabel).replaceAll('\\{contactsLabel\\}', contactsLabel), xmlString.replaceAll('v[0-9]{2}\\.[0-9]', ''));
     }
 
@@ -394,7 +394,7 @@ private class XMLTest {
     private static void serializeEmptyContactList()
     {
         String xmlString = XML.serialize(new List<Contact>()).toString();
-        String contactsLabel = Contact.getSObjectType().getDescribe().labelplural;
+        String contactsLabel = Contact.getSObjectType().getDescribe().labelPlural;
         System.assertEquals('<{contactsLabel}></{contactsLabel}>'.replaceAll('\\{contactsLabel\\}', contactsLabel), xmlString);
     }
 
