@@ -894,7 +894,7 @@ public class XML {
 
                 // If we have text return and the namespace is valid, return it.
                 else if (reader.getEventType() == XmlTag.CHARACTERS) {
-                    return reader.getText();
+                    return parseString(reader.getText());
                 }
 
                 hasNext = reader.hasNext();
@@ -903,6 +903,25 @@ public class XML {
                 }
             }
             return objectMap.isEmpty() ? null : objectMap;
+        }
+
+        /**
+         * Provides a way to intercept the parsing of strings and overwrite it.
+         *
+         * @param value A string containing any value.
+         *
+         * @return An evaluated string value from the object wrapper
+         */
+        private Object parseString(String value)
+        {
+            switch on new XML.ObjectWrapper(value).getTypeName() {
+                when 'Boolean' {
+                    return value == 'true';
+                }
+                when else {
+                    return value;
+                }
+            }
         }
     }
 
