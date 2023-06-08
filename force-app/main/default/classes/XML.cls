@@ -596,6 +596,7 @@ public class XML {
         private String apexTypeName;
         private Set<String> arrayNodes = new Set<String>();
         private Boolean showNamespaces = true;
+        private List<String> rootNode = new List<String>();
         private String filterNamespace;
         private String reservedWordSuffix = '_x';
 
@@ -641,11 +642,7 @@ public class XML {
         {
             Map<String, Object> objectMap;
 
-            try {
-                objectMap = parse();
-            } catch (Exception e) {
-                throw new XmlException('The XML string is invalid, value: ' + xmlString);
-            }
+            objectMap = parse();
 
             // If we haven't passed a type, return the map we have.
             if (apexType == null) {
@@ -714,6 +711,25 @@ public class XML {
             return this;
         }
 
+        /**
+         * Sets the root node that the deserialization should pass from.
+         *
+         * @param rootNode The name of the root node that will be set
+         *
+         * @return An internal Reader class that provides access to additional functionality via method chaining
+         */
+        public Reader setRootNode(String rootNode)
+        {
+            List<String> rootNodeArray = rootNode.split('/');
+            for (Integer i = rootNodeArray.size() - 1; i >= 0; i--) {
+                if (String.isBlank(rootNodeArray.get(i))) {
+                    rootNodeArray.remove(i);
+                }
+            }
+
+            this.rootNode = rootNodeArray;
+            return this;
+        }
 
         /**
          * Set the type of object the xml string will be converted to.
@@ -808,7 +824,40 @@ public class XML {
         {
             XmlStreamReader xmlStreamReader = new XmlStreamReader(xmlString);
             xmlStreamReader.setCoalescing(true);
-            return (Map<String, Object>) parseNested(xmlStreamReader, null);
+            return (Map<String, Object>) getNestedNodeValue(parseNested(xmlStreamReader, null), this.rootNode, 0);
+        }
+
+        /**
+         * Recursively calls itself to drill into a nested value within an object.
+         *
+         * @param node The current node that is needing to be accessed.
+         * @param path A list of paths comma delimited.
+         * @param index The current index of the path
+         *
+         * @return The resulting object that has been parsed
+         */
+        private Map<String, Object> getNestedNodeValue(Object node, List<String> path, Integer index)
+        {
+            ObjectWrapper objectWrapper = new ObjectWrapper(node);
+            Boolean isOutOfBounds = index >= path.size();
+            String pathCurrent = !isOutOfBounds && !String.isBlank(path.get(index)) ? path.get(index) : 'element';
+
+            // If the path is blank we are at our last entry.
+            if (isOutOfBounds) {
+                if (objectWrapper.instanceOfMap()) {
+                    return (Map<String, Object>) node;
+                }
+                return new Map<String, Object>{
+                    pathCurrent => node
+                };
+            }
+
+            // Otherwise drill into the object further.
+            if (objectWrapper.instanceOfMap()) {
+                return getNestedNodeValue(((Map<String, Object>) node).get(pathCurrent), path, index + 1);
+            }
+
+            throw new XmlException('Cannot drill into the node ' + node + ' set by the root node path ' + this.rootNode);
         }
 
         /**
