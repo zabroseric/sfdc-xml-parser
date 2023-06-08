@@ -690,6 +690,24 @@ private class XMLTest {
     }
 
     @IsTest
+    private static void deserializeBooleanTrueCapital()
+    {
+        Object obj = XML.deserialize('<element>True</element>').toObject();
+        System.assertEquals(new Map<String, Boolean>{
+            'element' => true
+        }, obj);
+    }
+
+    @IsTest
+    private static void deserializeBooleanFalseCapital()
+    {
+        Object obj = XML.deserialize('<element>False</element>').toObject();
+        System.assertEquals(new Map<String, Boolean>{
+            'element' => false
+        }, obj);
+    }
+
+    @IsTest
     private static void deserializeEmptyList()
     {
         Object obj = XML.deserialize('<elements></elements>').toObject();

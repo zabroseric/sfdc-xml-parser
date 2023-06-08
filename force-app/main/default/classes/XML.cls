@@ -1342,7 +1342,7 @@ public class XML {
             String objString = objUntyped.toString();
 
             // Any primitive types.
-            if (String.isBlank(objString.replaceFirst('true|false', ''))) {
+            if (String.isBlank(objString.replaceFirst('True|true|False|false', ''))) {
                 return 'Boolean';
             }
             if (String.isBlank(objString.replaceFirst('[0-9]{4}-[0-9]{2}-[0-9]{2}', ''))) {
