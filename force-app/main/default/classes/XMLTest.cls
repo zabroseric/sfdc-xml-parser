@@ -183,6 +183,18 @@ private class XMLTest {
         System.assertEquals(value, objectWrapper.toMap());
     }
 
+    @IsTest
+    private static void typeList()
+    {
+        List<String> value = new List<String>{
+            'val1', 'val2'
+        };
+        XML.ObjectWrapper objectWrapper = new XML.ObjectWrapper(value);
+
+        System.assertEquals('List', objectWrapper.getTypeName());
+        System.assertEquals(value, objectWrapper.toList());
+    }
+
     /*
     ---------------------------------------------
     -- SObject Tests
@@ -656,6 +668,24 @@ private class XMLTest {
         Object obj = XML.deserialize('<element>&lt;&gt;</element>').toObject();
         System.assertEquals(new Map<String, String>{
             'element' => '<>'
+        }, obj);
+    }
+
+    @IsTest
+    private static void deserializeBooleanTrue()
+    {
+        Object obj = XML.deserialize('<element>true</element>').toObject();
+        System.assertEquals(new Map<String, Boolean>{
+            'element' => true
+        }, obj);
+    }
+
+    @IsTest
+    private static void deserializeBooleanFalse()
+    {
+        Object obj = XML.deserialize('<element>false</element>').toObject();
+        System.assertEquals(new Map<String, Boolean>{
+            'element' => false
         }, obj);
     }
 
@@ -1146,6 +1176,34 @@ private class XMLTest {
     }
 
     @IsTest
+    public static void serializeObjectInferTypes()
+    {
+        ClassWithTypes classWithTypes = (ClassWithTypes) XML.deserialize(
+            '<ClassWithTypes>' +
+                '  <Date>2019-01-28</Date>' +
+                '  <Time>11:00:09Z</Time>' +
+                '  <boolean_true>true</boolean_true>' +
+                '  <boolean_false>false</boolean_false>' +
+                '  <integer_xyz>123</integer_xyz>' +
+                '  <string_xyz>test</string_xyz>' +
+                '  <string_true>true</string_true>' +
+                '  <string_false>false</string_false>' +
+                '</ClassWithTypes>'
+        ).setType(ClassWithTypes.class)
+            .setReservedWordSuffix('_xyz')
+            .toObject();
+
+        System.assertEquals(Date.newInstance(2019, 01, 28), classWithTypes.date_xyz);
+        System.assertEquals(Time.newInstance(11, 00, 09, 0), classWithTypes.time_xyz);
+        System.assert(classWithTypes.boolean_true);
+        System.assert(!classWithTypes.boolean_false);
+        System.assertEquals(123, classWithTypes.integer_xyz);
+        System.assertEquals('true', classWithTypes.string_true);
+        System.assertEquals('false', classWithTypes.string_false);
+        System.assertEquals('test', classWithTypes.string_xyz);
+    }
+
+    @IsTest
     public static void serializeObjectNoAttributes()
     {
         Library library = new Library(
@@ -1417,5 +1475,16 @@ private class XMLTest {
         public Map<String, String> attributes = new Map<String, String>();
         public String self;
         public String abc;
+    }
+
+    public class ClassWithTypes {
+        public Date date_xyz;
+        public Time time_xyz;
+        public Boolean boolean_true;
+        public Boolean boolean_false;
+        public Integer integer_xyz;
+        public String string_xyz;
+        public String string_true;
+        public String string_false;
     }
 }
