@@ -644,6 +644,8 @@ public class XML {
 
             try {
                 objectMap = parse();
+            } catch (XmlPropagateException e) {
+                throw e;
             } catch (Exception e) {
                 throw new XmlException('The XML string is invalid, value: ' + xmlString);
             }
@@ -724,7 +726,7 @@ public class XML {
          */
         public Reader setRootNode(String rootNode)
         {
-            List<String> rootNodeArray = rootNode.split('/');
+            List<String> rootNodeArray = (rootNode != null ? rootNode : '').split('/');
             for (Integer i = rootNodeArray.size() - 1; i >= 0; i--) {
                 if (String.isBlank(rootNodeArray.get(i))) {
                     rootNodeArray.remove(i);
@@ -844,7 +846,16 @@ public class XML {
         {
             ObjectWrapper objectWrapper = new ObjectWrapper(node);
             Boolean isOutOfBounds = index >= path.size();
-            String pathCurrent = !isOutOfBounds && !String.isBlank(path.get(index)) ? path.get(index) : 'element';
+            String pathCurrent = '';
+
+            if (!isOutOfBounds) {
+                pathCurrent = path.get(index);
+            } else if (index > 0) {
+                pathCurrent = path.get(index - 1);
+            } else {
+                pathCurrent = DEFAULT_NODE_NAME;
+            }
+
 
             // If the path is blank we are at our last entry.
             if (isOutOfBounds) {
@@ -861,7 +872,7 @@ public class XML {
                 return getNestedNodeValue(((Map<String, Object>) node).get(pathCurrent), path, index + 1);
             }
 
-            throw new XmlException('Cannot drill into the node ' + node + ' set by the root node path ' + this.rootNode);
+            throw new XmlPropagateException('Cannot drill into the node "' + pathCurrent + '" set by the root node path /' + String.join(this.rootNode, '/'));
         }
 
         /**
@@ -976,6 +987,16 @@ public class XML {
                 }
             }
         }
+    }
+
+    /**
+     * ===============================================================================
+     * An internal exception class that allows propagation of errors from inner
+     * methods.
+     * ===============================================================================
+     */
+    class XmlPropagateException extends Exception {
+
     }
 
     /**

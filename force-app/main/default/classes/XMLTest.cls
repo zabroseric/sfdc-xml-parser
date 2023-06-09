@@ -805,14 +805,136 @@ private class XMLTest {
     }
 
     @IsTest
-    private static void deserializeInvalid()
+    private static void deserializeRootNodeSingleLevel()
+    {
+        Object obj = XML.deserialize('<a>value</a>').setRootNode('/a').toObject();
+        System.assertEquals(new Map<String, String>{
+            'a' => 'value'
+        }, obj);
+    }
+
+    @IsTest
+    private static void deserializeRootNodeSingleLevelNoLeadingSlash()
+    {
+        Object obj = XML.deserialize('<a>value</a>').setRootNode('a').toObject();
+        System.assertEquals(new Map<String, String>{
+            'a' => 'value'
+        }, obj);
+    }
+
+    @IsTest
+    private static void deserializeRootNodeSingleLevelMultipleLeadingSlashes()
+    {
+        Object obj = XML.deserialize('<a>value</a>').setRootNode('//a').toObject();
+        System.assertEquals(new Map<String, String>{
+            'a' => 'value'
+        }, obj);
+    }
+
+    @IsTest
+    private static void deserializeRootNodeSingleLevelTrailingSlash()
+    {
+        Object obj = XML.deserialize('<a>value</a>').setRootNode('a/').toObject();
+        System.assertEquals(new Map<String, String>{
+            'a' => 'value'
+        }, obj);
+    }
+
+    @IsTest
+    private static void deserializeRootNodeSingleLevelMultipleTrailingSlashes()
+    {
+        Object obj = XML.deserialize('<a>value</a>').setRootNode('a//').toObject();
+        System.assertEquals(new Map<String, String>{
+            'a' => 'value'
+        }, obj);
+    }
+
+    @IsTest
+    private static void deserializeRootNodeSingleLevelOnlySlashes()
+    {
+        Object obj = XML.deserialize('<a>value</a>').setRootNode('////').toObject();
+        System.assertEquals(new Map<String, String>{
+            'a' => 'value'
+        }, obj);
+    }
+
+    @IsTest
+    private static void deserializeRootNodeMultiLevelDrillSingle()
+    {
+        Object obj = XML.deserialize('<a><b><c>value</c></b></a>').setRootNode('/a/b').toObject();
+        System.assertEquals(new Map<String, Object>{
+            'c' => 'value'
+        }, obj);
+    }
+
+    @IsTest
+    private static void deserializeRootNodeMultiLevelDrillMulti()
+    {
+        Object obj = XML.deserialize('<a><b><c>value</c></b></a>').setRootNode('/a/b').toObject();
+        System.assertEquals(new Map<String, String>{
+            'c' => 'value'
+        }, obj);
+    }
+
+    @IsTest
+    private static void deserializeRootNodeMultiLevelDrillFull()
+    {
+        Object obj = XML.deserialize('<a><b><c>value</c></b></a>').setRootNode('/a/b/c').toObject();
+        System.assertEquals(new Map<String, String>{
+            'c' => 'value'
+        }, obj);
+    }
+
+    @IsTest
+    private static void deserializeRootNodeDrillInvalid()
     {
         try {
-            XML.deserialize('invalid').toObject();
+            XML.deserialize('<a>value</a>').setRootNode('/a/b/c').toObject();
             throw new XmlException('Error not thrown.');
         } catch (Exception e) {
-            System.assertEquals('The XML string is invalid, value: invalid', e.getMessage());
+            System.assertEquals('Cannot drill into the node "b" set by the root node path /a/b/c', e.getMessage());
         }
+    }
+
+    @IsTest
+    private static void deserializeRootNodeMultiLevelMultiMap()
+    {
+        Object obj = XML.deserialize('<a><b><c>value1</c><d>value2</d></b></a>').setRootNode('/a/b').toObject();
+        System.assertEquals(new Map<String, String>{
+            'c' => 'value1',
+            'd' => 'value2'
+        }, obj);
+    }
+
+    @IsTest
+    private static void deserializeRootNodeMultiLevelMultiList()
+    {
+        Object obj = XML.deserialize('<a><b><c>value1</c><c>value2</c></b></a>').setRootNode('/a/b').toObject();
+        System.assertEquals(new Map<String, Object>{
+            'c' => new List<String>{
+                'value1', 'value2'
+            }
+        }, obj);
+    }
+
+    @IsTest
+    private static void deserializeRootNodeMultiLevelMultiListInvalidPath()
+    {
+        try {
+            XML.deserialize('<a><b><c>value1</c></b><b><c>value2</c></b></a>').setRootNode('/a/b/c').toObject();
+            throw new XmlException('Error not thrown.');
+        } catch (Exception e) {
+            System.assertEquals('Cannot drill into the node "c" set by the root node path /a/b/c', e.getMessage());
+        }
+    }
+
+    @IsTest
+    private static void deserializeRootNodeSingleLevelNull()
+    {
+        Object obj = XML.deserialize('<a>value</a>').setRootNode(null).toObject();
+        System.assertEquals(new Map<String, String>{
+            'a' => 'value'
+        }, obj);
     }
 
     /*
@@ -1209,6 +1331,37 @@ private class XMLTest {
                 '</ClassWithTypes>'
         ).setType(ClassWithTypes.class)
             .setReservedWordSuffix('_xyz')
+            .toObject();
+
+        System.assertEquals(Date.newInstance(2019, 01, 28), classWithTypes.date_xyz);
+        System.assertEquals(Time.newInstance(11, 00, 09, 0), classWithTypes.time_xyz);
+        System.assert(classWithTypes.boolean_true);
+        System.assert(!classWithTypes.boolean_false);
+        System.assertEquals(123, classWithTypes.integer_xyz);
+        System.assertEquals('true', classWithTypes.string_true);
+        System.assertEquals('false', classWithTypes.string_false);
+        System.assertEquals('test', classWithTypes.string_xyz);
+    }
+
+    @IsTest
+    public static void serializeObjectInferTypesRootNode()
+    {
+        ClassWithTypes classWithTypes = (ClassWithTypes) XML.deserialize(
+            '<OuterNode>' +
+                '  <ClassWithTypes>' +
+                '    <Date>2019-01-28</Date>' +
+                '    <Time>11:00:09Z</Time>' +
+                '    <boolean_true>true</boolean_true>' +
+                '    <boolean_false>false</boolean_false>' +
+                '    <integer_xyz>123</integer_xyz>' +
+                '    <string_xyz>test</string_xyz>' +
+                '    <string_true>true</string_true>' +
+                '    <string_false>false</string_false>' +
+                '  </ClassWithTypes>' +
+                '</OuterNode>'
+        ).setType(ClassWithTypes.class)
+            .setReservedWordSuffix('_xyz')
+            .setRootNode('/OuterNode/ClassWithTypes')
             .toObject();
 
         System.assertEquals(Date.newInstance(2019, 01, 28), classWithTypes.date_xyz);

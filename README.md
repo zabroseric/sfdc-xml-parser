@@ -52,6 +52,7 @@ Built Status:
     - [filterNamespace](#filternamespace)
     - [showNamespaces (default) / hideNamespaces](#shownamespaces-default--hidenamespaces)
     - [addArrayNode / setArrayNodes](#addarraynode--setarraynodes)
+    - [setRootNode](#setrootnode)
   - [Other Cool Things](#other-cool-things)
     - [Deserialization Interfaces](#deserialization-interfaces)
     - [Self Keyword](#self-keyword)
@@ -325,6 +326,7 @@ Map<String, Object> objectMap = (Map<String, Object>) XML.deserialize('<elements
     - [filterNamespace](#filternamespace)
     - [showNamespaces (default) / hideNamespaces](#shownamespaces-default--hidenamespaces)
     - [addArrayNode / setArrayNodes](#addarraynode--setarraynodes)
+    - [setRootNode](#setrootnode)
   - [Other Cool Things](#other-cool-things)
     - [Deserialization Interfaces](#deserialization-interfaces)
     - [Self Keyword](#self-keyword)
@@ -639,6 +641,7 @@ Further to this, any fields with the called **attributes** with a type of Map<St
 - [hideNamespaces](#shownamespaces-default--hidenamespaces)
 - [addArrayNode](#addarraynode--setarraynodes)
 - [setArrayNodes](#addarraynode--setarraynodes)
+- [setRootNode](#setrootnode)
 
 ### toObject
 
@@ -781,6 +784,30 @@ Library library = (Library) XML.deserialize(
   '   </catalog>' +
   '</library>', Library.class)
      .setArrayNodes(new Set<String>{'book'}).toObject();
+```
+
+
+### setRootNode
+
+In the situations there are nodes that we want to ignore, we can specify a Xpath decendant to start from.
+
+In the below example, the books node is detected as a map as there is only one child node. If the **setArrayNodes**, the deserialization will treat the books node as an array.
+
+```java
+Map<String, Object> objElements = (Map<String, Object>) XML.deserialize(
+  '<Response>' +
+  '  <Body>' +
+  '    <Fields>' +
+  '      <element1>First</element1>' +
+  '      <element2>Last</element2>' +
+  '    </Fields>' +
+  '  </Body>' +
+  '</Response>'
+)
+  .setRootNode('/Response/Body/Fields')
+  .toObject();
+
+// => {element1=First, element2=Last}
 ```
 
 ## Other Cool Things
