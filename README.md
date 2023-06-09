@@ -15,32 +15,58 @@ Built Status:
 
 ## Table of Contents
 
-- [Features](#features)
-- [Overview](#overview)
-- [Getting Started](#getting-started)
-- [Usage - Serialization](#usage---serialization)
-  - [SObject](#sobject)
-  - [SObject List](#sobject-list)
-  - [Objects](#objects)
-  - [Maps](#maps)
-- [Usage - Deserialization](#usage---deserialization)
-  - [SObject](#sobject-1)
-  - [SObject List](#sobject-list-1)
-  - [Objects](#objects-1)
-  - [Maps](#maps-1)
-- [References - Serialization](#references---serialization)
-- [References - Deserialization](#references---deserialization)
-- [Other Cool Things](#other-cool-things)
-- [Limitations](#limitations)
-- [Contributing](#contributing)
+- [SFDC XML Parser](#sfdc-xml-parser)
+  - [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [Overview](#overview)
+  - [Getting Started](#getting-started)
+  - [Usage - Serialization](#usage---serialization)
+    - [SObject](#sobject)
+    - [SObject List](#sobject-list)
+    - [Objects](#objects)
+    - [Maps](#maps)
+  - [Usage - Deserialization](#usage---deserialization)
+    - [SObject](#sobject-1)
+    - [SObject List](#sobject-list-1)
+    - [Objects](#objects-1)
+    - [Maps](#maps-1)
+  - [References - Serialization](#references---serialization)
+    - [Summary](#summary)
+    - [toString](#tostring)
+    - [toBase64](#tobase64)
+    - [debug](#debug)
+    - [showNulls (default) / suppressNulls](#shownulls-default--suppressnulls)
+    - [minify (default) / beautify](#minify-default--beautify)
+    - [hideEncoding (default) / showEncoding](#hideencoding-default--showencoding)
+    - [addRootAttribute / setRootAttributes](#addrootattribute--setrootattributes)
+    - [addNamespace / setNamespaces](#addnamespace--setnamespaces)
+    - [setRootNodeName](#setrootnodename)
+    - [splitAttributes (default) / embedAttributes](#splitattributes-default--embedattributes)
+  - [References - Deserialization](#references---deserialization)
+    - [Summary](#summary-1)
+    - [toObject](#toobject)
+    - [setType](#settype)
+    - [toString](#tostring-1)
+    - [debug](#debug-1)
+    - [setReservedWordSuffix](#setreservedwordsuffix)
+    - [filterNamespace](#filternamespace)
+    - [showNamespaces (default) / hideNamespaces](#shownamespaces-default--hidenamespaces)
+    - [addArrayNode / setArrayNodes](#addarraynode--setarraynodes)
+  - [Other Cool Things](#other-cool-things)
+    - [Deserialization Interfaces](#deserialization-interfaces)
+    - [Self Keyword](#self-keyword)
+    - [Node Name Sanatization](#node-name-sanatization)
+    - [Value Encoding](#value-encoding)
+  - [Limitations](#limitations)
+  - [Contributing](#contributing)
 
 ## Features
 
 * Serialize / Deserialize SObjects
 * Serialize / Deserialize Apex Classes
 * Function Chaining
-* SObject Tag Detection
-* Tag and Value Sanitization
+* SObject Node Detection
+* Node Name and Value Sanitization
 * Clark Notations
 * Deserialization Interfaces
 * Namespace Filtering
@@ -83,7 +109,7 @@ Examples can be seen below of common serialization use-cases from handling SObje
 
 ### SObject
 
-The root tag is automatically detected, and attributes are added.
+The root node is automatically detected, and attributes are added.
 
 ```java
 Contact contact = new Contact(
@@ -111,7 +137,7 @@ Result
 
 ### SObject List
 
-The root tag is converted to a plural and contains all the tags as per the single SObject serialization.
+The root node name is converted to a plural that contains child nodes as per the single SObject serialization.
 
 ```java
 List<Contact> contacts = new List<Contact>{
@@ -156,7 +182,7 @@ Result
 
 ### Objects
 
-Classes / Objects can be serialized. If the root tag is not set, this will default to either **element** or **elements** depending on if we have a list of objects.
+Classes / Objects can be serialized. If the root node name is not set, this will default to either **element** or **elements** depending on if we have a list of objects.
 
 ```java
 Library libraryObject = new Library(
@@ -170,7 +196,7 @@ Library libraryObject = new Library(
     )
 );
 
-String xmlString = XML.serialize(libraryObject).setRootTag('library').beautify().toString();
+String xmlString = XML.serialize(libraryObject).setRootNodeName('library').beautify().toString();
 ```
 
 Result
@@ -262,22 +288,50 @@ Map<String, Object> objectMap = (Map<String, Object>) XML.deserialize('<elements
 
 ### Summary
 
-- [toString](#tostring)
-- [toBase64](#tobase64)
-- [debug](#debug)
-- [showNulls](#shownulls-default--suppressnulls)
-- [suppressNulls](#shownulls-default--suppressnulls)
-- [minify](#minify-default--beautify)
-- [beautify](#minify-default--beautify)
-- [hideEncoding](#hideencoding-default--showencoding)
-- [showEncoding](#hideencoding-default--showencoding)
-- [addRootAttribute](#addrootattribute--setrootattributes)
-- [setRootAttributes](#addrootattribute--setrootattributes)
-- [addNamespace](#addnamespace--setnamespaces)
-- [setNamespaces](#addnamespace--setnamespaces)
-- [setRootTag](#setroottag)
-- [splitAttributes](#splitattributes-default--embedattributes)
-- [embedAttributes](#splitattributes-default--embedattributes)
+- [SFDC XML Parser](#sfdc-xml-parser)
+  - [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [Overview](#overview)
+  - [Getting Started](#getting-started)
+  - [Usage - Serialization](#usage---serialization)
+    - [SObject](#sobject)
+    - [SObject List](#sobject-list)
+    - [Objects](#objects)
+    - [Maps](#maps)
+  - [Usage - Deserialization](#usage---deserialization)
+    - [SObject](#sobject-1)
+    - [SObject List](#sobject-list-1)
+    - [Objects](#objects-1)
+    - [Maps](#maps-1)
+  - [References - Serialization](#references---serialization)
+    - [Summary](#summary)
+    - [toString](#tostring)
+    - [toBase64](#tobase64)
+    - [debug](#debug)
+    - [showNulls (default) / suppressNulls](#shownulls-default--suppressnulls)
+    - [minify (default) / beautify](#minify-default--beautify)
+    - [hideEncoding (default) / showEncoding](#hideencoding-default--showencoding)
+    - [addRootAttribute / setRootAttributes](#addrootattribute--setrootattributes)
+    - [addNamespace / setNamespaces](#addnamespace--setnamespaces)
+    - [setRootNodeName](#setrootnodename)
+    - [splitAttributes (default) / embedAttributes](#splitattributes-default--embedattributes)
+  - [References - Deserialization](#references---deserialization)
+    - [Summary](#summary-1)
+    - [toObject](#toobject)
+    - [setType](#settype)
+    - [toString](#tostring-1)
+    - [debug](#debug-1)
+    - [setReservedWordSuffix](#setreservedwordsuffix)
+    - [filterNamespace](#filternamespace)
+    - [showNamespaces (default) / hideNamespaces](#shownamespaces-default--hidenamespaces)
+    - [addArrayNode / setArrayNodes](#addarraynode--setarraynodes)
+  - [Other Cool Things](#other-cool-things)
+    - [Deserialization Interfaces](#deserialization-interfaces)
+    - [Self Keyword](#self-keyword)
+    - [Node Name Sanatization](#node-name-sanatization)
+    - [Value Encoding](#value-encoding)
+  - [Limitations](#limitations)
+  - [Contributing](#contributing)
 
 ### toString
 
@@ -290,7 +344,7 @@ Contact contact = new Contact(
 );
 
 String xmlString = XML.serialize(contact)
-    .setRootTag('NewTag') // function 1
+    .setRootNodeName('NewNodeName') // function 1
     .showEncoding()       // function 2
     .beautify()           // function 3
     .toString();          // Result
@@ -300,13 +354,13 @@ The result in the **xmlString** variable is as follows:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<NewTag>
+<NewNodeName>
   <attributes>
     <type>Contact</type>
   </attributes>
   <FirstName>First</FirstName>
   <LastName>Last</LastName>
-</NewTag>
+</NewNodeName>
 ```
 
 ### toBase64
@@ -320,7 +374,7 @@ Contact contact = new Contact(
 );
 
 String xmlString = XML.serialize(contact)
-    .setRootTag('NewTag') // function 1
+    .setRootNodeName('NewNodeName') // function 1
     .showEncoding()       // function 2
     .beautify()           // function 3
     .toBase64();          // Result
@@ -369,9 +423,9 @@ Debug 2
 
 ### showNulls (default) / suppressNulls
 
-When there are empty or null value tag values, by default the value will be rendered within the respective XML tag. However, if we want to hide null or empty values, it is possible to use the **suppressNulls** method.
+When there are empty or null value node values, by default the value will be rendered within the respective XML node. However, if we want to hide null or empty values, it is possible to use the **suppressNulls** method.
 
-The result is that any empty tags are removed until all tags have values in them.
+The result is that any empty nodes are removed until all nodes have values in them.
 
 ```java
 Library library = new Library(
@@ -385,10 +439,10 @@ Library library = new Library(
     )
 );
 
-XML.serialize(library).suppressNulls().setRootTag('library').beautify().debug();
+XML.serialize(library).suppressNulls().setRootNodeName('library').beautify().debug();
 ```
 
-In the example, the second book does not have any authors. The result is that the author, authors tags are suppressed alongside the price of the book.
+In the example, the second book does not have any authors. The result is that the author, authors nodes are suppressed alongside the price of the book.
 
 ```xml
 <library>
@@ -412,7 +466,7 @@ In the example, the second book does not have any authors. The result is that th
 
 ### minify (default) / beautify
 
-By default the resulting XML has no spaces or new lines between tags to help with readability. The default behaviour can be overridden by calling the **beautify** method to nicely format the resulting string.
+By default the resulting XML has no spaces or new lines between nodes to help with readability. The default behaviour can be overridden by calling the **beautify** method to nicely format the resulting string.
 
 ```java
 Contact contact = new Contact(
@@ -472,7 +526,7 @@ String xmlString = XML.serialize(contact).showEncoding().beautify().toString();
 
 When needing to provide additional attributes this can be set one at a time via the **addRootAttribute** method, or several at a time using the **setRootAttributes** method.
 
-By default attributes are stored inside an attributes tag, however, this can be overridden by the **embedAttributes** method.
+By default attributes are stored as a child attributes node, however, this can be overridden by the **embedAttributes** method.
 
 ```java
 Contact contact = new Contact(
@@ -483,7 +537,7 @@ Contact contact = new Contact(
 String xmlString = XML.serialize(contact).addRootAttribute('key1', 'value1').addRootAttribute('key2', 'value2').beautify().toString();
 ```
 
-The result is two additional elements within the attributes tag are present.
+The result is two additional elements within the attributes node are present.
 
 ```xml
 <Contact>
@@ -522,11 +576,11 @@ The result gets transformed to valid xml:
 </element>
 ```
 
-### setRootTag
+### setRootNodeName
 
-Tag names are automatically detected for SObjects so that its name is reflected in the tag. For all other situations of serialization, the default for this is **element**.
+Node names are automatically detected for SObjects. For all other situations of serialization, the default for this is **element**.
 
-To override this functionality, a root tag can be specified.
+To override this functionality, a root node name can be specified.
 
 ```java
 Contact contact = new Contact(
@@ -534,24 +588,24 @@ Contact contact = new Contact(
   LastName = 'Last'
 );
 
-String xmlString = XML.serialize(contact).setRootTag('MyTag').beautify().toString();
+String xmlString = XML.serialize(contact).setRootNodeName('MyNode').beautify().toString();
 ```
 
 ```xml
-<MyTag>
+<MyNode>
   <attributes>
     <type>Contact</type>
   </attributes>
   <FirstName>First</FirstName>
   <LastName>Last</LastName>
-</MyTag>
+</MyNode>
 ```
 
 ### splitAttributes (default) / embedAttributes
 
-By default, attributes are contained within a child tag within the current node. This is to support expected behaviour when serializing SObjects.
+By default, attributes are created as seperate child nodes on the parent. This is to support expected behaviour when serializing SObjects.
 
-When overriding this default functionality, attributes will be stored within the tag itself.
+When overriding this default functionality, attributes will be stored as proper node attributes.
 
 ```java
 Contact contact = new Contact(
@@ -569,7 +623,7 @@ String xmlString = XML.serialize(contact).embedAttributes().beautify().toString(
 </Contact>
 ```
 
-Further to this, any fields with the called **attributes** with a type of Map<String, Object> will be automatically embedded as attributes in the current tag.
+Further to this, any fields with the called **attributes** with a type of Map<String, Object> will be automatically embedded as attributes on the current node.
 
 ## References - Deserialization
 
@@ -671,7 +725,7 @@ For a list of these, please see the reserved word table [here](https://developer
 
 ### filterNamespace
 
-Clark notations can be used to specify namespaces and local names. These tags can be filtered by defining the local names you would like to keep.
+Clark notations can be used to specify namespaces and local names. These nodes can be filtered by defining the local names you would like to keep.
 
 For more information on Clark notation please see the link [here](http://www.jclark.com/xml/xmlns.htm).
 
@@ -709,9 +763,9 @@ Map<String, Map<String, String>> embeddedMap = (Map<String, Map<String, String>>
 
 ### addArrayNode / setArrayNodes
 
-As reflection is not fully supported in Apex, the library cannot detect if a element should be treated as a List or Map. As a solution, we can specify what tags should be treated as an array when deserialized.
+As reflection is not fully supported in Apex, the library cannot detect if a element should be treated as a List or Map. As a solution, we can specify what nodes should be treated as an array when deserialized.
 
-In the below example, the books tag is detected as a map as there is only one child tag. If the **setArrayNodes**, the deserialization will treat the books tag as an array.
+In the below example, the books node is detected as a map as there is only one child node. If the **setArrayNodes**, the deserialization will treat the books node as an array.
 
 ```java
 Library library = (Library) XML.deserialize(
@@ -735,7 +789,7 @@ Library library = (Library) XML.deserialize(
 
 By default, deserialization is handled through the native Apex JSON functionality. However, if the apex object extends the XML.Deserialize interface, the default behaviour will be overridden and the xmlDeserialize method is called.
 
-The method will be passed either a list, map or string based on what is located inside current the XML tag.
+The method will be passed either a list, map or primitive data type based on what is located inside current the XML node.
 
 An example of this can be seen below:
 
@@ -776,7 +830,7 @@ class TableCell {
   }
 }
 
-String xmlString = XML.serialize(new TableRow()).setRootTag('tr').embedAttributes().beautify().toString();
+String xmlString = XML.serialize(new TableRow()).setRootNodeName('tr').embedAttributes().beautify().toString();
 System.debug(xmlString);
 
 ```
@@ -790,9 +844,9 @@ The result is a table row containing cells with attributes.
 </tr>
 ```
 
-### Tag Sanatization
+### Node Name Sanatization
 
-There are a lot of requirements when it comes to handling XML encoding both within the tags and elements themselves. In the example of tag names, these cannot start with a number. To prevent errors, keys starting with numbers are automatically prefixed with an underscore.
+There are a lot of requirements when it comes to handling XML encoding both within the names and values themselves. In the example of node names, these cannot start with a number. To prevent errors, keys starting with numbers are automatically prefixed with an underscore.
 
 ```apex
 String xmlString = XML.serialize(new Map<String, String>{
@@ -808,7 +862,7 @@ String xmlString = XML.serialize(new Map<String, String>{
 
 ### Value Encoding
 
-In addition to tag sanitization, text values containing special characters are required to be encoded.
+In addition to node name sanitization, text values containing special characters are required to be encoded.
 
 Please see an example of this working:
 

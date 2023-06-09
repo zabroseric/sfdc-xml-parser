@@ -27,8 +27,8 @@ SOFTWARE.
  */
 public class XML {
 
-    private static final String DEFAULT_ROOT_TAG = 'elements';
-    private static final String DEFAULT_ELEMENT_TAG = 'element';
+    private static final String DEFAULT_ROOT_NODE_NAME = 'elements';
+    private static final String DEFAULT_NODE_NAME = 'element';
     private static final List<String> RESERVED_WORDS = new List<String>{
         'abstract', 'activate', 'and', 'any', 'array', 'as', 'asc', 'autonomous', 'begin', 'bigdecimal', 'blob', 'boolean', 'break', 'bulk', 'by', 'byte', 'case', 'cast', 'catch', 'char', 'class', 'collect', 'commit', 'const', 'continue', 'currency', 'date', 'datetime', 'decimal', 'default', 'delete', 'desc', 'do', 'double', 'else', 'end', 'enum', 'exception', 'exit', 'export', 'extends', 'false', 'final', 'finally', 'float', 'for', 'from', 'global', 'goto', 'group', 'having', 'hint', 'if', 'implements', 'import', 'in', 'inner', 'insert', 'instanceof', 'int', 'integer', 'interface', 'into', 'join', 'like', 'limit', 'list', 'long', 'loop', 'map', 'merge', 'new', 'not', 'null', 'nulls', 'number', 'object', 'of', 'on', 'or', 'outer', 'override', 'package', 'parallel', 'pragma', 'private', 'protected', 'public', 'retrieve', 'return', 'rollback', 'select', 'set', 'short', 'sObject', 'sort', 'static', 'string', 'super', 'switch', 'synchronized', 'system', 'testmethod', 'then', 'this', 'throw', 'time', 'transaction', 'trigger', 'true', 'try', 'undelete', 'update', 'upsert', 'using', 'virtual', 'void', 'webservice', 'when', 'where', 'while'
     };
@@ -87,12 +87,12 @@ public class XML {
     public class Writer {
 
         private Boolean suppressNulls = false;
-        private String rootTag = DEFAULT_ROOT_TAG;
-        private String elementTag = DEFAULT_ELEMENT_TAG;
+        private String rootNodeName = DEFAULT_ROOT_NODE_NAME;
+        private String elementNodeName = DEFAULT_NODE_NAME;
         private Boolean showEncoding = false;
         private Map<String, String> rootAttributes = new Map<String, String>();
         private final Map<String, String> namespaces = new Map<String, String>();
-        private Boolean detectRootTag = true;
+        private Boolean detectRootNodeName = true;
         private Boolean beautify = false;
         private Boolean embedAttributes = false;
 
@@ -127,14 +127,14 @@ public class XML {
             }
 
             // Flatten the elements if possible, so Elements / Element => Element
-            if (document.getRootElement().getChildElements().size() == 1 && rootTag == DEFAULT_ROOT_TAG) {
+            if (document.getRootElement().getChildElements().size() == 1 && rootNodeName == DEFAULT_ROOT_NODE_NAME) {
                 xmlString = xmlString
-                    .replaceAll('<(/?)(' + rootTag + '|' + elementTag + ')([^>]*)>' +
-                        '\\s*(<(/?)(' + rootTag + '|' + elementTag + ')([^>]*)>)?',
-                        '<$1' + elementTag + '$3>');
+                    .replaceAll('<(/?)(' + rootNodeName + '|' + elementNodeName + ')([^>]*)>' +
+                        '\\s*(<(/?)(' + rootNodeName + '|' + elementNodeName + ')([^>]*)>)?',
+                        '<$1' + elementNodeName + '$3>');
             }
 
-            // If there are rootAttributes in the closing tags, remove them.
+            // If there are rootAttributes in the closing nodes, remove them.
             xmlString = xmlString.replaceAll('</([^> ]+) [^>]+="[^>]+">', '</$1>');
 
             return beautify ? formatString(xmlString) : xmlString;
@@ -257,8 +257,8 @@ public class XML {
         /**
          * Sets a namespace to be used.
          *
-         * @param uri The namespace uri that will be set in the root tag
-         * @param prefix The prefix set on all tags that mention the uri
+         * @param uri The namespace uri that will be set in the root node
+         * @param prefix The prefix set on all nodes that mention the uri
          *
          * @return An internal Writer class that provides access to additional functionality via method chaining
          */
@@ -285,22 +285,22 @@ public class XML {
         }
 
         /**
-         * Sets the root tag for the XML.
+         * Sets the root node name for the XML.
          * Note: Setting this will disable the automatic detection of the objects.
          *
-         * @param rootTag The name of the root tag that will be set
+         * @param rootNode The name of the root node that will be set
          *
          * @return An internal Writer class that provides access to additional functionality via method chaining
          */
-        public Writer setRootTag(String rootTag)
+        public Writer setRootNodeName(String rootNode)
         {
-            this.rootTag = rootTag;
-            this.detectRootTag = false;
+            this.rootNodeName = rootNode;
+            this.detectRootNodeName = false;
             return this;
         }
 
         /**
-         * Sets any attributes tags to be serialized into the tag.
+         * Sets any attributes to be serialized into the node itself.
          *
          * @return An internal Writer class that provides access to additional functionality via method chaining
          */
@@ -311,7 +311,7 @@ public class XML {
         }
 
         /**
-         * Sets any attributes tags to be serialized into a separate child tag.
+         * Sets any attributes nodes to be serialized into a separate child node.
          *
          * @return An internal Writer class that provides access to additional functionality via method chaining
          */
@@ -334,7 +334,7 @@ public class XML {
             String xmlStringFormatted = '';
             Integer indents = 0;
 
-            // Iterate over the individual pieces of the split tags
+            // Iterate over the individual pieces of the split nodes
             // detecting how many indents are required on every line.
             for (String split : xmlStringSplit) {
                 if (split.left(1) == '/') {
@@ -363,20 +363,20 @@ public class XML {
          */
         private Dom.Document parse()
         {
-            // Detects and sets both the root and element tags based on any SObjects that can be found from
+            // Detects and sets both the root and element nodes based on any SObjects that can be found from
             // the object provided.
-            if (!detectRootTag) {
+            if (!detectRootNodeName) {
                 // Do nothing.
             } else if (obj.instanceOfSObjectMap() || obj.instanceOfSObjectList()) {
-                rootTag = obj.getSObjectDescribe().labelPlural;
-                elementTag = obj.getSObjectDescribe().label;
+                rootNodeName = obj.getSObjectDescribe().labelPlural;
+                elementNodeName = obj.getSObjectDescribe().label;
             } else if (obj.instanceOfSObject()) {
-                rootTag = obj.getSObjectDescribe().label;
+                rootNodeName = obj.getSObjectDescribe().label;
             }
 
             ObjectWrapper obj = obj.toUntyped();
             Dom.Document document = new Dom.Document();
-            Dom.XmlNode xmlNode = document.createRootElement(rootTag, null, null);
+            Dom.XmlNode xmlNode = document.createRootElement(rootNodeName, null, null);
 
             // If we have chosen to embed attributes, add them to the current node.
             if (embedAttributes && obj.hasAttributes()) {
@@ -390,7 +390,7 @@ public class XML {
 
             // Detect the type of root object we have and parse it.
             if (obj.instanceOfList() && !obj.isEmpty()) {
-                parseList(obj.toList(), elementTag, xmlNode);
+                parseList(obj.toList(), elementNodeName, xmlNode);
             } else if (obj.instanceOfMap() && !obj.isEmpty()) {
                 parseMap(obj.toMap(), xmlNode);
             }
@@ -494,14 +494,14 @@ public class XML {
                 // If we have a list, keep using the same key.
                 String key = setNamespace(keys.get(keys.size() - 1 > i ? i : keys.size() - 1));
 
-                // If the tag name starts with a numeric value, put an underscore at the beginning
+                // If the node name starts with a numeric value, put an underscore at the beginning
                 // This is useful when passing object maps so that the xml remains valid.
                 key = key.left(1).isNumeric() ? '_' + key : key;
 
                 ObjectWrapper obj = new ObjectWrapper(values.get(i));
                 Dom.XmlNode childNode;
 
-                // If we have chosen to embed attributes, add them to the tag.
+                // If we have chosen to embed attributes, add them to the node.
                 if (embedAttributes && key == 'attributes') {
                     continue;
                 }
@@ -538,7 +538,7 @@ public class XML {
                     notEmptyNumber += 1;
                 }
 
-                // If we have chosen not to suppress nulls, ensure an empty tag is there.
+                // If we have chosen not to suppress nulls, ensure an empty node is there.
                 else if (!suppressNulls) {
                     childNode = xmlNode.addChildElement(key, null, null);
                     notEmptyNumber += 1;
@@ -557,26 +557,26 @@ public class XML {
         }
 
         /**
-         * Replaces the tag name with the required prefix.
+         * Replaces the node name with the required prefix.
          *
-         * @param tagName The original name of the tag
+         * @param nodeName The original name of the node
          *
-         * @return A string of the new tag name after considering the namespaces
+         * @return A string of the new node name after considering the namespaces
          */
-        private String setNamespace(String tagName)
+        private String setNamespace(String nodeName)
         {
-            if (!tagName.contains('{')) {
-                return tagName;
+            if (!nodeName.contains('{')) {
+                return nodeName;
             }
 
             for (String uri : namespaces.keySet()) {
-                if (tagName.contains('{' + uri + '}')) {
-                    return tagName.replace('{' + uri + '}', namespaces.get(uri) + ':');
+                if (nodeName.contains('{' + uri + '}')) {
+                    return nodeName.replace('{' + uri + '}', namespaces.get(uri) + ':');
                 }
             }
 
-            // If we can't find the tag, just remove the clark notation.
-            return tagName.substringAfter('}');
+            // If we can't find the node, just remove the clark notation.
+            return nodeName.substringAfter('}');
         }
     }
 
@@ -609,7 +609,7 @@ public class XML {
          */
         public Reader read(String xmlString)
         {
-            // Remove white space in blank tags to correctly set them as nulls.
+            // Remove white space in blank nodes to correctly set them as nulls.
             this.xmlString = xmlString != null ? xmlString.replaceAll('>\\s+<', '><') : null;
             return this;
         }
@@ -642,7 +642,11 @@ public class XML {
         {
             Map<String, Object> objectMap;
 
-            objectMap = parse();
+            try {
+                objectMap = parse();
+            } catch (Exception e) {
+                throw new XmlException('The XML string is invalid, value: ' + xmlString);
+            }
 
             // If we haven't passed a type, return the map we have.
             if (apexType == null) {
@@ -698,7 +702,7 @@ public class XML {
         }
 
         /**
-         * When one of the tags contains a reserved word, this tag will be renamed and a suffix
+         * When one of the nodes contains a reserved word, this node will be renamed and a suffix
          * added so that it can be correctly managed.
          *
          * @param reservedWordSuffix A suffix string
@@ -755,7 +759,7 @@ public class XML {
          * Set xml nodes that should be treated as an array, even
          * if they have not been explicitly detected as an array.
          *
-         * @param arrayNodes A set of tag names
+         * @param arrayNodes A set of node names
          *
          * @return An internal Reader class that provides access to additional functionality via method chaining
          */
@@ -769,7 +773,7 @@ public class XML {
          * Set an xml node that should be treated as an array, even
          * if they have not been explicitly detected as an array.
          *
-         * @param node A string containing one tag name
+         * @param node A string containing one node name
          *
          * @return An internal Reader class that provides access to additional functionality via method chaining
          */
@@ -805,7 +809,7 @@ public class XML {
         }
 
         /**
-         * Hide namespaces and show only the tag name.
+         * Hide namespaces and show only the node name.
          *
          * @return An internal Reader class that provides access to additional functionality via method chaining
          */
@@ -873,7 +877,7 @@ public class XML {
         {
             Map<String, Object> objectMap = new Map<String, Object>();
             Object objectCurrent;
-            String tagName;
+            String nodeName;
 
             Boolean hasNext = reader.hasNext();
             if (hasNext) {
@@ -881,12 +885,12 @@ public class XML {
             }
 
             while (hasNext) {
-                // Add the clark notation to the tag name if we have a namespace.
-                tagName = (showNamespaces && reader.getNamespace() != null ? '{' + reader.getNamespace() + '}' : '') + reader.getLocalName();
+                // Add the clark notation to the node name if we have a namespace.
+                nodeName = (showNamespaces && reader.getNamespace() != null ? '{' + reader.getNamespace() + '}' : '') + reader.getLocalName();
 
                 // If we have a start element add this.
                 if (reader.getEventType() == XmlTag.START_ELEMENT) {
-                    // Add the attributes as a separate tag to support deserialization.
+                    // Add the attributes as a separate node to support deserialization.
                     Map<String, Object> attributeMap = new Map<String, Object>();
                     if (reader.getAttributeCount() > 0) {
                         for (Integer i = 0; i < reader.getAttributeCount(); i++) {
@@ -894,9 +898,9 @@ public class XML {
                         }
                     }
 
-                    objectCurrent = parseNested(reader, tagName);
+                    objectCurrent = parseNested(reader, nodeName);
 
-                    // If we have a map as our current tag, add the attributes tag / merge the values.
+                    // If we have a map as our current node, add the attributes node / merge the values.
                     if (objectCurrent instanceof Map<String, Object> && !attributeMap.isEmpty()) {
                         Map<String, Object> objectCurrentMap = ((Map<String, Object>) objectCurrent);
                         if (objectCurrentMap.containsKey('attributes')) {
@@ -907,36 +911,36 @@ public class XML {
                     }
 
                     // If we haven't come across this node, and we should make it array, create one.
-                    if (!objectMap.containsKey(tagName) && arrayNodes.contains(tagName)) {
-                        objectMap.put(tagName, new List<Object>{
+                    if (!objectMap.containsKey(nodeName) && arrayNodes.contains(nodeName)) {
+                        objectMap.put(nodeName, new List<Object>{
                             objectCurrent
                         });
                     }
                     // If we haven't come across this node, by default create a map.
-                    else if (!objectMap.containsKey(tagName)) {
-                        objectMap.put(tagName, objectCurrent);
+                    else if (!objectMap.containsKey(nodeName)) {
+                        objectMap.put(nodeName, objectCurrent);
                     }
                     // If we have this node, and it's a list add to it.
-                    else if (objectMap.get(tagName) instanceof List<Object>) {
-                        ((List<Object>) objectMap.get(tagName)).add(objectCurrent);
+                    else if (objectMap.get(nodeName) instanceof List<Object>) {
+                        ((List<Object>) objectMap.get(nodeName)).add(objectCurrent);
                     }
                     // Otherwise turn our map into a list.
                     else {
-                        objectMap.put(tagName, new List<Object>{
-                            objectMap.get(tagName),
+                        objectMap.put(nodeName, new List<Object>{
+                            objectMap.get(nodeName),
                             objectCurrent
                         });
                     }
 
                     // If we have chosen to filter the namespace remove the node we generated.
                     // This way we still loop through the reader.
-                    if (filterNamespace != null && tagName.contains('{') && !tagName.contains(filterNamespace)) {
-                        objectMap.remove(tagName);
+                    if (filterNamespace != null && nodeName.contains('{') && !nodeName.contains(filterNamespace)) {
+                        objectMap.remove(nodeName);
                     }
 
                 }
 
-                // We we are ending our starting tag break this loop.
+                // We we are ending our starting node break this loop.
                 else if (reader.getEventType() == XmlTag.END_ELEMENT && elementName == reader.getLocalName()) {
                     break;
                 }
@@ -1055,7 +1059,7 @@ public class XML {
          * - {reservedword}
          *
          * @param str An xml encoded string
-         * @param suffix A string that will be added to the end of the tags
+         * @param suffix A string that will be added to the end of the node names
          *
          * @return An xml encoded string with reserved words replaced
          */

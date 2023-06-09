@@ -226,14 +226,14 @@ private class XMLTest {
     }
 
     @IsTest
-    private static void serializeSObjectRootTag()
+    private static void serializeSObjectRootNodeName()
     {
         Contact contact = new Contact(
             FirstName = 'First',
             LastName = 'Last'
         );
-        String xmlString = XML.serialize(contact).setRootTag('NewTag').toString();
-        System.assertEquals('<NewTag><attributes><type>Contact</type></attributes><FirstName>First</FirstName><LastName>Last</LastName></NewTag>', xmlString);
+        String xmlString = XML.serialize(contact).setRootNodeName('NewNode').toString();
+        System.assertEquals('<NewNode><attributes><type>Contact</type></attributes><FirstName>First</FirstName><LastName>Last</LastName></NewNode>', xmlString);
     }
 
     @IsTest
@@ -269,7 +269,7 @@ private class XMLTest {
     }
 
     @IsTest
-    private static void serializeSObjectsRootTag()
+    private static void serializeSObjectsRootNodeName()
     {
         List<Contact> contacts = new List<Contact>{
             new Contact(
@@ -282,8 +282,8 @@ private class XMLTest {
             )
         };
 
-        String xmlString = XML.serialize(contacts).setRootTag('NewTag').toString();
-        System.assertEquals('<NewTag><element><attributes><type>Contact</type></attributes><FirstName>First1</FirstName><LastName>Last1</LastName></element><element><attributes><type>Contact</type></attributes><FirstName>First2</FirstName><LastName>Last2</LastName></element></NewTag>', xmlString);
+        String xmlString = XML.serialize(contacts).setRootNodeName('NewNode').toString();
+        System.assertEquals('<NewNode><element><attributes><type>Contact</type></attributes><FirstName>First1</FirstName><LastName>Last1</LastName></element><element><attributes><type>Contact</type></attributes><FirstName>First2</FirstName><LastName>Last2</LastName></element></NewNode>', xmlString);
     }
 
     @IsTest
@@ -573,16 +573,16 @@ private class XMLTest {
     }
 
     @IsTest
-    private static void serializeChangeRootTag()
+    private static void serializeChangeRootNodeName()
     {
-        String xmlString = XML.serialize(new List<String>()).setRootTag('None').toString();
+        String xmlString = XML.serialize(new List<String>()).setRootNodeName('None').toString();
         System.assertEquals('<None></None>', xmlString);
     }
 
     @IsTest
-    private static void serializeChangeRootTagSuppressNulls()
+    private static void serializeChangeRootNodeNameSuppressNulls()
     {
-        String xmlString = XML.serialize(new List<String>()).suppressNulls().setRootTag('None').toString();
+        String xmlString = XML.serialize(new List<String>()).suppressNulls().setRootNodeName('None').toString();
         System.assertEquals('<None />', xmlString);
     }
 
@@ -626,7 +626,7 @@ private class XMLTest {
     }
 
     @IsTest
-    private static void serializeMapElementsTag()
+    private static void serializeMapElementsNode()
     {
         String xmlString = XML.serialize(new Map<String, String>{
             'key1' => 'val1',
@@ -636,7 +636,7 @@ private class XMLTest {
     }
 
     @IsTest
-    private static void serializeMapElementTag()
+    private static void serializeMapElementNode()
     {
         String xmlString = XML.serialize(new Map<String, String>{
             'key1' => 'val1'
@@ -1008,7 +1008,7 @@ private class XMLTest {
             )
         );
 
-        String xmlString = XML.serialize(library).setRootTag('library').toString();
+        String xmlString = XML.serialize(library).setRootNodeName('library').toString();
         System.assertEquals('<library><catalog><books><book><title>title1</title><price>23.00</price><authors><author>Name1</author><author>Name2</author></authors></book><book><title>title2</title><price>23.00</price><authors><author>Name3</author></authors></book><book><title>title5</title><price /><authors><author /></authors></book></books></catalog></library>', xmlString);
     }
 
@@ -1032,7 +1032,7 @@ private class XMLTest {
             )
         );
 
-        String xmlString = XML.serialize(library).suppressNulls().setRootTag('library').toString();
+        String xmlString = XML.serialize(library).suppressNulls().setRootNodeName('library').toString();
         System.assertEquals('<library><catalog><books><book><title>title1</title><price>23.00</price><authors><author>Name1</author><author>Name2</author></authors></book><book><title>title2</title><price>23.00</price><authors><author>Name3</author></authors></book><book><title>title5</title></book></books></catalog></library>', xmlString);
     }
 
@@ -1056,7 +1056,7 @@ private class XMLTest {
             )
         );
 
-        String xmlString = XML.serialize(library).setRootTag('library').toString();
+        String xmlString = XML.serialize(library).setRootNodeName('library').toString();
         System.assertEquals('<library><catalog><books><book><title>title1</title><price>23.00</price><authors><author>Name1</author><author>Name2</author></authors></book><book><title>title2</title><price>23.00</price><authors><author>Name3</author></authors></book><book><title>title5</title><price /><authors><author /></authors></book></books></catalog></library>', xmlString);
     }
 
@@ -1078,7 +1078,7 @@ private class XMLTest {
             )
         );
 
-        String xmlString = XML.serialize(libraryObject).setRootTag('Library').toString();
+        String xmlString = XML.serialize(libraryObject).setRootNodeName('Library').toString();
         System.assertEquals(String.valueOf(libraryObject), String.valueOf(XML.deserialize(xmlString, Library.class).toObject()));
     }
 
@@ -1101,7 +1101,7 @@ private class XMLTest {
             )
         );
 
-        String xmlString = XML.serialize(libraryObject).setRootTag('Library').toString();
+        String xmlString = XML.serialize(libraryObject).setRootNodeName('Library').toString();
         System.assertEquals(String.valueOf(libraryObject),
             String.valueOf(XML.deserialize(xmlString, Library.class)
                 .addArrayNode('author').toObject())
@@ -1121,7 +1121,7 @@ private class XMLTest {
             )
         );
 
-        String xmlString = XML.serialize(libraryObject).setRootTag('Library').toString();
+        String xmlString = XML.serialize(libraryObject).setRootNodeName('Library').toString();
         System.assertEquals(String.valueOf(libraryObject),
             String.valueOf(XML.deserialize(xmlString, Library.class)
                 .setArrayNodes(new Set<String>{
@@ -1135,7 +1135,7 @@ private class XMLTest {
     {
         Book bk = new Book('title5', null, '23.00');
 
-        String xmlString = XML.serialize(bk).setRootTag('Book').toString();
+        String xmlString = XML.serialize(bk).setRootNodeName('Book').toString();
         System.assertEquals(String.valueOf(bk),
             String.valueOf(XML.deserialize(xmlString, Book.class))
         );
@@ -1146,7 +1146,7 @@ private class XMLTest {
     {
         Book bk = new Book('title5', null, '23.00');
 
-        String xmlString = XML.serialize(bk).setRootTag('Unknown').toString();
+        String xmlString = XML.serialize(bk).setRootNodeName('Unknown').toString();
         System.assertEquals(String.valueOf(new Book()),
             String.valueOf(XML.deserialize(xmlString, Book.class))
         );
@@ -1241,7 +1241,7 @@ private class XMLTest {
             )
         );
 
-        String xmlString = XML.serialize(library).setRootTag('library').embedAttributes().toString();
+        String xmlString = XML.serialize(library).setRootNodeName('library').embedAttributes().toString();
         System.assertEquals('<library><catalog><books><book><title>title1</title><price>23.00</price><authors><author>Name1</author><author>Name2</author></authors></book><book><title>title2</title><price>23.00</price><authors><author>Name3</author></authors></book><book><title>title5</title><price /><authors><author /></authors></book></books></catalog></library>', xmlString);
     }
 
@@ -1253,7 +1253,7 @@ private class XMLTest {
         book.attributes.put('key2', 'value2');
         book.title = 'title';
 
-        String xmlString = XML.serialize(book).setRootTag('book').embedAttributes().toString();
+        String xmlString = XML.serialize(book).setRootNodeName('book').embedAttributes().toString();
         System.assertEquals('<book key2="value2" key1="value1"><title>title</title></book>', xmlString);
     }
 
@@ -1265,7 +1265,7 @@ private class XMLTest {
         book.attributes.put('key2', 'value2');
         book.title = 'title';
 
-        String xmlString = XML.serialize(book).setRootTag('book').splitAttributes().toString();
+        String xmlString = XML.serialize(book).setRootNodeName('book').splitAttributes().toString();
         System.assertEquals('<book><title>title</title><attributes><key2>value2</key2><key1>value1</key1></attributes></book>', xmlString);
     }
 
@@ -1277,7 +1277,7 @@ private class XMLTest {
         book.attributes.put('key2', 23);
         book.title = 'title';
 
-        String xmlString = XML.serialize(book).setRootTag('book').embedAttributes().toString();
+        String xmlString = XML.serialize(book).setRootNodeName('book').embedAttributes().toString();
         System.assertEquals('<book key2="23" key1="12"><title>title</title></book>', xmlString);
     }
 
@@ -1288,7 +1288,7 @@ private class XMLTest {
         book.attributes.put('key1', null);
         book.title = 'title';
 
-        String xmlString = XML.serialize(book).setRootTag('book').embedAttributes().toString();
+        String xmlString = XML.serialize(book).setRootNodeName('book').embedAttributes().toString();
         System.assertEquals('<book key1="null"><title>title</title></book>', xmlString);
     }
 
@@ -1299,7 +1299,7 @@ private class XMLTest {
         book.attributes.put('key1', 'value1');
         book.title = 'title';
 
-        String xmlString = XML.serialize(book).setRootTag('book').addRootAttribute('key2', 'value2').embedAttributes().toString();
+        String xmlString = XML.serialize(book).setRootNodeName('book').addRootAttribute('key2', 'value2').embedAttributes().toString();
         System.assertEquals('<book key1="value1" key2="value2"><title>title</title></book>', xmlString);
     }
 
@@ -1310,7 +1310,7 @@ private class XMLTest {
         book.attributes.put('key1', 'value1');
         book.title = 'title';
 
-        String xmlString = XML.serialize(book).setRootTag('book').addRootAttribute('key1', 'value2').embedAttributes().toString();
+        String xmlString = XML.serialize(book).setRootNodeName('book').addRootAttribute('key1', 'value2').embedAttributes().toString();
         System.assertEquals('<book key1="value2"><title>title</title></book>', xmlString);
     }
 
@@ -1321,7 +1321,7 @@ private class XMLTest {
         book.attributes.put('key1', 'value1');
         book.self = 'title';
 
-        String xmlString = XML.serialize(book).setRootTag('book').addRootAttribute('key2', 'value2').embedAttributes().toString();
+        String xmlString = XML.serialize(book).setRootNodeName('book').addRootAttribute('key2', 'value2').embedAttributes().toString();
         System.assertEquals('<book key1="value1" key2="value2">title</book>', xmlString);
     }
 
@@ -1338,7 +1338,7 @@ private class XMLTest {
 
         String xmlString = XML.serialize(new List<BookWithStringAttributesSelf>{
             book1, book2
-        }).setRootTag('books').embedAttributes().toString();
+        }).setRootNodeName('books').embedAttributes().toString();
         System.assertEquals('<books><element key1="value1">title1</element><element key2="value2">title2</element></books>', xmlString);
     }
 
@@ -1350,7 +1350,7 @@ private class XMLTest {
             book.attributes.put('key1', 'value1');
             book.self = 'title';
             book.abc = 'abc123';
-            String xmlString = XML.serialize(book).setRootTag('book').toString();
+            String xmlString = XML.serialize(book).setRootNodeName('book').toString();
             System.assert(false, 'Exception expected to be thrown: ' + xmlString);
         } catch (XmlException e) {
             System.assert(e.getMessage().contains('self keyword'));
