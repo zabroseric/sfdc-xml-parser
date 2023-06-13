@@ -497,6 +497,17 @@ private class XMLTest {
     ---------------------------------------------
      */
     @IsTest
+    private static void serializeLargeSize()
+    {
+        String xmlString = '';
+        for (Integer i = 0; i < 10000; i++) {
+            xmlString += '<node>abcdefghijklmnopqrstuvwxyzvalue</node>';
+        }
+
+        XML.deserialize('<nodeLarge>' + xmlString + '</nodeLarge>').toObject();
+    }
+
+    @IsTest
     private static void serializeEmptyString()
     {
         String xmlString = XML.serialize('').toString();
@@ -1313,6 +1324,42 @@ private class XMLTest {
         } catch (XmlException e) {
             System.assertEquals('An array node has not been correctly set by value "Name4"', e.getMessage());
         }
+    }
+
+
+    @IsTest
+    public static void serializeObjectReservedWordDisabled()
+    {
+        Object obj = XML.deserialize(
+            '<element>' +
+                '  <Date>2019-01-28</Date>' +
+                '  <Time>11:00:09Z</Time>' +
+                '</element>'
+        )
+            .unsanitize()
+            .toObject();
+
+        System.assertEquals(new Map<String, String>{
+            'element' => null
+        }, obj);
+    }
+
+    @IsTest
+    public static void serializeObjectReservedWordEnabled()
+    {
+        Map<String, Object> obj = (Map<String, Object>) XML.deserialize(
+            '<element>' +
+                '  <Date>2019-01-28</Date>' +
+                '  <Time>11:00:09Z</Time>' +
+                '</element>'
+        )
+            .sanitize()
+            .toObject();
+
+        Map<String, Object> objElement = (Map<String, Object>) obj.get('element');
+
+        System.assertEquals('2019-01-28', objElement.get('Date_x'));
+        System.assertEquals('11:00:09Z', objElement.get('Time_x'));
     }
 
     @IsTest

@@ -53,6 +53,7 @@ Built Status:
     - [showNamespaces (default) / hideNamespaces](#shownamespaces-default--hidenamespaces)
     - [addArrayNode / setArrayNodes](#addarraynode--setarraynodes)
     - [setRootNode](#setrootnode)
+    - [sanitize (default) / unsanitize](#sanitize-default--unsanitize)
   - [Other Cool Things](#other-cool-things)
     - [Deserialization Interfaces](#deserialization-interfaces)
     - [Self Keyword](#self-keyword)
@@ -327,6 +328,7 @@ Map<String, Object> objectMap = (Map<String, Object>) XML.deserialize('<elements
     - [showNamespaces (default) / hideNamespaces](#shownamespaces-default--hidenamespaces)
     - [addArrayNode / setArrayNodes](#addarraynode--setarraynodes)
     - [setRootNode](#setrootnode)
+    - [sanitize (default) / unsanitize](#sanitize-default--unsanitize)
   - [Other Cool Things](#other-cool-things)
     - [Deserialization Interfaces](#deserialization-interfaces)
     - [Self Keyword](#self-keyword)
@@ -642,6 +644,7 @@ Further to this, any fields with the called **attributes** with a type of Map<St
 - [addArrayNode](#addarraynode--setarraynodes)
 - [setArrayNodes](#addarraynode--setarraynodes)
 - [setRootNode](#setrootnode)
+- [sanitize (default) / unsanitize](#sanitize-default--unsanitize)
 
 ### toObject
 
@@ -809,6 +812,22 @@ Map<String, Object> objElements = (Map<String, Object>) XML.deserialize(
 
 // => {element1=First, element2=Last}
 ```
+
+
+### sanitize (default) / unsanitize
+
+When reading an XML string that is very large it's possible to disable the sanization in order to overcome regex expression limits, and help reduce heap and CPU limits.
+
+Note: This should only be changed if you are confident that both the XML string is minified and the node names do not contain any reserved words.
+
+An example of how this can be changed, can be seen below:
+
+```java
+Map<String, Object> objElements = (Map<String, Object>) XML.deserialize(myVeryBigXMLString)
+  .unsanitize()
+  .toObject();
+```
+
 
 ## Other Cool Things
 

@@ -591,11 +591,13 @@ public class XML {
      */
     public class Reader {
 
-        private String xmlString { get {return new Utils().replaceXMLReservedWords(xmlString, reservedWordSuffix);} set; }
+        private final Utils utils = new Utils();
+        private String xmlString;
         private Type apexType;
         private String apexTypeName;
         private Set<String> arrayNodes = new Set<String>();
         private Boolean showNamespaces = true;
+        private Boolean sanitize = true;
         private List<String> rootNode = new List<String>();
         private String filterNamespace;
         private String reservedWordSuffix = '_x';
@@ -609,8 +611,11 @@ public class XML {
          */
         public Reader read(String xmlString)
         {
-            // Remove white space in blank nodes to correctly set them as nulls.
-            this.xmlString = xmlString != null ? xmlString.replaceAll('>\\s+<', '><') : null;
+            if (xmlString == null) {
+                return this;
+            }
+
+            this.xmlString = xmlString;
             return this;
         }
 
@@ -657,8 +662,8 @@ public class XML {
 
             // If the type is deserializable and we have found the type as a key in the map,
             // return the value of this key.
-            else if (((Type) Deserializable.class).isAssignableFrom(apexType) && new Utils().containsCaseInsensitive(objectMap, apexTypeName)) {
-                return ((Deserializable) apexType.newInstance()).xmlDeserialize((Object) new Utils().getObjCaseInsensitive(objectMap, apexTypeName));
+            else if (((Type) Deserializable.class).isAssignableFrom(apexType) && utils.containsCaseInsensitive(objectMap, apexTypeName)) {
+                return ((Deserializable) apexType.newInstance()).xmlDeserialize((Object) utils.getObjCaseInsensitive(objectMap, apexTypeName));
             }
 
             // Otherwise if the type is deserializable, pass the entire map.
@@ -667,8 +672,8 @@ public class XML {
             }
 
             // If the apex type is a partial key with the map use that, this is useful for nested classes.
-            else if (new Utils().containsCaseInsensitive(objectMap, apexTypeName)) {
-                return JSON.deserialize(JSON.serialize(new Utils().getObjCaseInsensitive(objectMap, apexTypeName)), apexType);
+            else if (utils.containsCaseInsensitive(objectMap, apexTypeName)) {
+                return JSON.deserialize(JSON.serialize(utils.getObjCaseInsensitive(objectMap, apexTypeName)), apexType);
             }
 
             // If the apex type we have is a list, get the list from the map.
@@ -714,6 +719,7 @@ public class XML {
         public Reader setReservedWordSuffix(String reservedWordSuffix)
         {
             this.reservedWordSuffix = reservedWordSuffix;
+            System.debug(this.reservedWordSuffix);
             return this;
         }
 
@@ -822,12 +828,47 @@ public class XML {
         }
 
         /**
+         * Ensures the xml string is formatted correctly for the XMLReader class
+         * and that all reserved words are correctly replaced with a suffix.
+         *
+         * @return An internal Reader class that provides access to additional functionality via method chaining
+         */
+        public Reader sanitize()
+        {
+            this.sanitize = true;
+            return this;
+        }
+
+        /**
+         * Disables sanitization for larger XML strings.
+         *
+         * Note: This should only be set if you are confident that the XML string is both minified and does not
+         * contain reserved words.
+         *
+         * @return An internal Reader class that provides access to additional functionality via method chaining
+         */
+        public Reader unsanitize()
+        {
+            this.sanitize = false;
+            return this;
+        }
+
+        /**
          * Entry points for the reader toObject method.
          *
          * @return The resulting map from parsing an XML object
          */
         private Map<String, Object> parse()
         {
+            // Sanitize the xml string before we start passing it.
+            String xmlString = this.xmlString;
+
+            if (sanitize) {
+                xmlString = utils
+                    .replaceXMLReservedWords(xmlString, reservedWordSuffix)
+                    .replaceAll('>\\s+<', '><');
+            }
+
             XmlStreamReader xmlStreamReader = new XmlStreamReader(xmlString);
             xmlStreamReader.setCoalescing(true);
             return (Map<String, Object>) getNestedNodeValue(parseNested(xmlStreamReader, null), this.rootNode, 0);
@@ -982,6 +1023,9 @@ public class XML {
                 when 'Boolean' {
                     return value == 'true';
                 }
+                when 'Null' {
+                    return null;
+                }
                 when else {
                     return value;
                 }
@@ -1075,9 +1119,6 @@ public class XML {
 
         /**
          * Returns a new XML string that replaces reserved words with a suffix.
-         * This can be in the form:
-         * - {Reservedword}
-         * - {reservedword}
          *
          * @param str An xml encoded string
          * @param suffix A string that will be added to the end of the node names
@@ -1090,25 +1131,10 @@ public class XML {
                 return str;
             }
 
-            String reservedWordsRegex = String.join(RESERVED_WORDS, '|');
-            String reservedUCWordsRegex = String.join(toUCWords(String.join(RESERVED_WORDS, ' ')).split(' '), '|');
-            return str.replaceAll('<(/?(' + reservedWordsRegex + '|' + reservedUCWordsRegex + '))>', '<$1' + suffix + '>');
-        }
-
-        /**
-         * Capitalizes the first letter of each word.
-         *
-         * @param str A standard string with words
-         *
-         * @return The string of words in title case
-         */
-        public String toUCWords(String str)
-        {
-            List<String> strWordArray = new List<String>();
-            for (String strWord : str.split(' ')) {
-                strWordArray.add(strWord.substring(0, 1).toUpperCase() + strWord.substring(1, strWord.length()));
+            for (String reservedWord : RESERVED_WORDS) {
+                str = str.replaceAll('(?i)<(/?(' + reservedWord + '))>', '<$1' + suffix + '>');
             }
-            return String.join(strWordArray, ' ');
+            return str;
         }
     }
 
@@ -1416,6 +1442,9 @@ public class XML {
             String objString = objUntyped.toString();
 
             // Any primitive types.
+            if (objString.deleteWhitespace() == '') {
+                return 'Null';
+            }
             if (String.isBlank(objString.replaceFirst('True|true|False|false', ''))) {
                 return 'Boolean';
             }
