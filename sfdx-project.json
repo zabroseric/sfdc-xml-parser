@@ -8,5 +8,5 @@
   "name": "XML",
   "namespace": "",
   "sfdcLoginUrl": "https://login.salesforce.com",
-  "sourceApiVersion": "54.0"
+  "sourceApiVersion": "65.0"
 }

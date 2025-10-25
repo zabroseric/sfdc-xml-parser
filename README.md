@@ -5,7 +5,7 @@ Built Status:
 ![build](https://img.shields.io/badge/build-passing-success)
 [![Maintainability](https://api.codeclimate.com/v1/badges/7dbda30d4ea9ddf96974/maintainability)](https://codeclimate.com/github/zabroseric/sfdc-xml-parser/maintainability)
 
-![sfdc package](https://img.shields.io/badge/sfdc%20package-53.0-blue)
+![sfdc package](https://img.shields.io/badge/sfdc%20package-65.0-blue)
 [![GitHub license](https://img.shields.io/github/license/zabroseric/sfdc-xml-parser.svg)](https://github.com/zabroseric/sfdc-xml-parser/blob/master/LICENSE)
 
 
