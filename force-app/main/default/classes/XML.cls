@@ -131,7 +131,7 @@ public class XML {
                 xmlString = xmlString
                     .replaceAll('<(/?)(' + rootNodeName + '|' + elementNodeName + ')([^>]*)>' +
                         '\\s*(<(/?)(' + rootNodeName + '|' + elementNodeName + ')([^>]*)>)?',
-                        '<$1' + elementNodeName + '$3>');
+                        '<$1' + elementNodeName + '$3$7>');
             }
 
             // If there are rootAttributes in the closing nodes, remove them.
@@ -509,7 +509,6 @@ public class XML {
                 // VALIDATION:
                 // Ensure we only have one either text or a child node when using the self keyword.
                 if ((key == 'self' && !xmlNode.getChildren().isEmpty()) || ((obj.instanceOfMap() || obj.instanceOfList()) && !String.isEmpty(xmlNode.getText()))) {
-                    System.debug(xmlNode.getText());
                     throw new XmlException('The object contains both the self keyword, and other child elements, please remove on of these.');
                 }
 
@@ -678,13 +677,49 @@ public class XML {
 
             // If the apex type we have is a list, get the list from the map.
             else if (apexType.toString().startsWith('List')) {
-                return JSON.deserialize('[' + JSON.serialize(objectMap).substringAfter('[').substringBeforeLast(']') + ']', apexType);
+                String itemTypeName = apexType.getName().substringBetween('<', '>');
+                if (itemTypeName.contains('.')) {
+                    itemTypeName = itemTypeName.substringAfterLast('.');
+                }
+                return JSON.deserialize(JSON.serialize(toList(objectMap, itemTypeName)), apexType);
             }
 
             // Otherwise just use the base deserialization.
             else {
                 return JSON.deserialize(JSON.serialize(objectMap), apexType);
             }
+        }
+
+        /**
+         * Finds the list items within the parsed map, drilling through wrapper nodes until either
+         * a node matching the list item type or a list is found. A single node is wrapped as a list
+         * so that xml containing one item still deserializes to a list.
+         *
+         * @param node The current node that is being drilled into
+         * @param itemTypeName The name of the list item type, e.g. Contact for List<Contact>
+         *
+         * @return The list of items
+         */
+        private List<Object> toList(Object node, String itemTypeName)
+        {
+            while (node instanceof Map<String, Object>) {
+                Map<String, Object> nodeMap = (Map<String, Object>) node;
+                if (String.isNotBlank(itemTypeName) && utils.getKeyCaseInsensitive(nodeMap, itemTypeName) != null) {
+                    node = utils.getObjCaseInsensitive(nodeMap, itemTypeName);
+                    break;
+                }
+                if (nodeMap.size() != 1) {
+                    break;
+                }
+                node = nodeMap.values().get(0);
+            }
+
+            if (node instanceof List<Object>) {
+                return (List<Object>) node;
+            }
+            return node == null ? new List<Object>() : new List<Object>{
+                node
+            };
         }
 
         /**
@@ -719,7 +754,6 @@ public class XML {
         public Reader setReservedWordSuffix(String reservedWordSuffix)
         {
             this.reservedWordSuffix = reservedWordSuffix;
-            System.debug(this.reservedWordSuffix);
             return this;
         }
 
@@ -1132,7 +1166,7 @@ public class XML {
             }
 
             for (String reservedWord : RESERVED_WORDS) {
-                str = str.replaceAll('(?i)<(/?(' + reservedWord + '))>', '<$1' + suffix + '>');
+                str = str.replaceAll('(?i)<(/?' + reservedWord + ')(?=[\\s/>])', '<$1' + suffix);
             }
             return str;
         }

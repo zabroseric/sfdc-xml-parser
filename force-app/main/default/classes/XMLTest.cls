@@ -473,6 +473,27 @@ private class XMLTest {
         System.assertEquals(contacts, contactResult);
     }
     @IsTest
+    private static void deserializeSObjectsSingle()
+    {
+        List<Contact> contacts = new List<Contact>{
+            new Contact(
+                FirstName = 'First1',
+                LastName = 'Last1'
+            )
+        };
+
+        List<Contact> contactResult = (List<Contact>) XML.deserialize(XML.serialize(contacts).toString()).setType(List<Contact>.class).toObject();
+        System.assertEquals(contacts, contactResult);
+    }
+
+    @IsTest
+    private static void deserializeSObjectsEmpty()
+    {
+        List<Contact> contactResult = (List<Contact>) XML.deserialize(XML.serialize(new List<Contact>()).toString()).setType(List<Contact>.class).toObject();
+        System.assertEquals(new List<Contact>(), contactResult);
+    }
+
+    @IsTest
     private static void deserializeSObjectWithIds()
     {
         List<Contact> contacts = new List<Contact>{
@@ -653,6 +674,24 @@ private class XMLTest {
             'key1' => 'val1'
         }).toString();
         System.assertEquals('<element><key1>val1</key1></element>', xmlString);
+    }
+
+    @IsTest
+    private static void deserializeListSingle()
+    {
+        List<String> result = (List<String>) XML.deserialize('<element>a</element>').setType(List<String>.class).toObject();
+        System.assertEquals(new List<String>{
+            'a'
+        }, result);
+    }
+
+    @IsTest
+    private static void deserializeListMulti()
+    {
+        List<String> result = (List<String>) XML.deserialize('<elements><element>a</element><element>b</element></elements>').setType(List<String>.class).toObject();
+        System.assertEquals(new List<String>{
+            'a', 'b'
+        }, result);
     }
 
     @IsTest
@@ -1363,6 +1402,21 @@ private class XMLTest {
     }
 
     @IsTest
+    public static void serializeObjectReservedWordAttributes()
+    {
+        Map<String, Object> obj = (Map<String, Object>) XML.deserialize(
+            '<element><Date type="d">2019-01-28</Date><Time /><Set/></element>'
+        ).toObject();
+
+        Map<String, Object> objElement = (Map<String, Object>) obj.get('element');
+
+        System.assertEquals('2019-01-28', objElement.get('Date_x'));
+        System.assert(objElement.containsKey('Time_x'));
+        System.assert(objElement.containsKey('Set_x'));
+        System.assert(!objElement.containsKey('Time'));
+    }
+
+    @IsTest
     public static void serializeObjectInferTypes()
     {
         ClassWithTypes classWithTypes = (ClassWithTypes) XML.deserialize(
@@ -1540,6 +1594,32 @@ private class XMLTest {
             book1, book2
         }).setRootNodeName('books').embedAttributes().toString();
         System.assertEquals('<books><element key1="value1">title1</element><element key2="value2">title2</element></books>', xmlString);
+    }
+
+    @IsTest
+    public static void serializeObjectAttributesSelfSingleElement()
+    {
+        BookWithStringAttributesSelf book = new BookWithStringAttributesSelf();
+        book.attributes.put('key1', 'value1');
+        book.self = 'title';
+
+        String xmlString = XML.serialize(new List<BookWithStringAttributesSelf>{
+            book
+        }).embedAttributes().toString();
+        System.assertEquals('<element key1="value1">title</element>', xmlString);
+    }
+
+    @IsTest
+    public static void serializeObjectAttributesSelfSingleElementWithRoot()
+    {
+        BookWithStringAttributesSelf book = new BookWithStringAttributesSelf();
+        book.attributes.put('key1', 'value1');
+        book.self = 'title';
+
+        String xmlString = XML.serialize(new List<BookWithStringAttributesSelf>{
+            book
+        }).addRootAttribute('key2', 'value2').embedAttributes().toString();
+        System.assertEquals('<element key2="value2" key1="value1">title</element>', xmlString);
     }
 
     @IsTest

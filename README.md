@@ -283,7 +283,7 @@ Similarly to serialization, a map/list of primitive types can be deserialized.
 
 ```java
 Map<String, Object> objectMap = (Map<String, Object>) XML.deserialize('<elements><key2>val2</key2><key1>val1</key1></elements>')
-    .setArrayNode('elements').toObject();
+    .addArrayNode('elements').toObject();
 ```
 
 ## References - Serialization
@@ -758,8 +758,6 @@ Library library = (Library) XML.deserialize(
 
 In the situations there are nodes that we want to ignore, we can specify a Xpath decendant to start from.
 
-In the below example, the books node is detected as a map as there is only one child node. If the **setArrayNodes**, the deserialization will treat the books node as an array.
-
 ```java
 Map<String, Object> objElements = (Map<String, Object>) XML.deserialize(
   '<Response>' +
@@ -884,7 +882,7 @@ String xmlString = XML.serialize(new Map<String, String>{
 
 ```xml
 <element>
-  <key>&_lt;value&_amp;</key>
+  <key>&lt;value&amp;</key>
 </element>
 ```
 
